@@ -32,7 +32,10 @@ const envSchema = z
       emptyStringToUndefined,
       z.string().min(1).optional(),
     ),
-    MAX_UPLOAD_SIZE_MB: z.coerce.number().int().positive().max(200).default(25),
+    MAX_UPLOAD_SIZE_MB: z.preprocess(
+      emptyStringToUndefined,
+      z.coerce.number().int().positive().max(200).default(25),
+    ),
     TELEGRAM_BOT_TOKEN: z.preprocess(
       emptyStringToUndefined,
       z.string().min(1).optional(),
@@ -45,7 +48,10 @@ const envSchema = z
       .string()
       .min(32)
       .default("development-only-secret-change-me-123"),
-    MODERATION_TOKEN_TTL_MINUTES: z.coerce.number().int().positive().default(720),
+    MODERATION_TOKEN_TTL_MINUTES: z.preprocess(
+      emptyStringToUndefined,
+      z.coerce.number().int().positive().default(720),
+    ),
     BREVO_API_KEY: z.preprocess(
       emptyStringToUndefined,
       z.string().min(1).optional(),
@@ -62,17 +68,18 @@ const envSchema = z
       .enum(["true", "false"])
       .default("true")
       .transform((value) => value === "true"),
-    SUBMISSION_RATE_LIMIT_WINDOW_SECONDS: z.coerce
-      .number()
-      .int()
-      .positive()
-      .default(300),
-    SUBMISSION_RATE_LIMIT_MAX_ATTEMPTS: z.coerce
-      .number()
-      .int()
-      .positive()
-      .default(4),
-    PORT: z.coerce.number().int().positive().optional(),
+    SUBMISSION_RATE_LIMIT_WINDOW_SECONDS: z.preprocess(
+      emptyStringToUndefined,
+      z.coerce.number().int().positive().default(300),
+    ),
+    SUBMISSION_RATE_LIMIT_MAX_ATTEMPTS: z.preprocess(
+      emptyStringToUndefined,
+      z.coerce.number().int().positive().default(4),
+    ),
+    PORT: z.preprocess(
+      emptyStringToUndefined,
+      z.coerce.number().int().positive().optional(),
+    ),
   })
   .superRefine((value, ctx) => {
     if (
