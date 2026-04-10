@@ -26,6 +26,7 @@ FROM base AS runner
 
 ENV NODE_ENV=production
 ENV PORT=5000
+ENV HOSTNAME=0.0.0.0
 ENV DATA_DIR=/app/data
 ENV UPLOAD_PENDING_DIR=/app/data/uploads/pending
 ENV UPLOAD_PUBLIC_DIR=/app/data/uploads/public
@@ -47,6 +48,4 @@ RUN mkdir -p /app/data/uploads/pending /app/data/uploads/public && chown -R node
 USER node
 
 EXPOSE 5000
-CMD ["npm", "run", "start:prod"]
-
 CMD ["npm", "run", "start:prod"]

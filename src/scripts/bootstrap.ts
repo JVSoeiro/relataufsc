@@ -5,10 +5,15 @@ loadEnvConfig(process.cwd());
 async function main() {
   const { bootstrapApp } = await import("../db/bootstrap");
   const { assertOperationalEnvironment } = await import("../lib/env");
+  const { closeDatabasePool } = await import("../db/index");
 
-  await bootstrapApp();
-  assertOperationalEnvironment();
-  console.log("UFSC Relata bootstrap completed.");
+  try {
+    await bootstrapApp();
+    assertOperationalEnvironment();
+    console.log("UFSC Relata bootstrap completed.");
+  } finally {
+    await closeDatabasePool();
+  }
 }
 
 main().catch((error) => {

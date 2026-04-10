@@ -57,3 +57,11 @@ export const db = new Proxy({} as AppDatabase, {
     return Reflect.get(ensureDbInstance(), property, receiver);
   },
 });
+
+export async function closeDatabasePool() {
+  if (poolInstance) {
+    await poolInstance.end();
+    poolInstance = null;
+    dbInstance = null;
+  }
+}
