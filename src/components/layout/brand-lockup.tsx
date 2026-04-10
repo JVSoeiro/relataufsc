@@ -22,17 +22,15 @@ export function BrandLockup({ compact = false }: BrandLockupProps) {
         </h1>
       </div>
 
-      <div className="flex min-h-11 min-w-[6.5rem] items-center justify-center rounded-[1.1rem] border border-white/70 bg-white/88 px-3 py-2 text-center text-[0.7rem] font-medium text-slate-500 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
-        {brandConfig.partnerLogoSrc ? (
-          <img
-            alt={brandConfig.partnerLogoAlt}
-            className="h-7 w-auto object-contain"
-            src={brandConfig.partnerLogoSrc}
-          />
-        ) : (
-          <span>{brandConfig.placeholderLabel}</span>
-        )}
-      </div>
+      {brandConfig.partnerLogoSrc ? (
+        <img
+          alt={brandConfig.partnerLogoAlt}
+          className={compact ? "h-10 w-auto object-contain" : "h-16 w-auto object-contain"}
+          src={brandConfig.partnerLogoSrc}
+        />
+      ) : (
+        <span className="text-sm text-slate-500">{brandConfig.placeholderLabel}</span>
+      )}
     </div>
   );
 }
