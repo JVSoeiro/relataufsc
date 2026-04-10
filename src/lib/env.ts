@@ -1,0 +1,159 @@
+import { z } from "zod";
+
+const emptyStringToUndefined = (value: unknown) => {
+  if (typeof value === "string" && value.trim().length === 0) {
+    return undefined;
+  }
+
+  return value;
+};
+
+const envSchema = z
+  .object({
+    NODE_ENV: z
+      .enum(["development", "test", "production"])
+      .default("development"),
+    APP_URL: z.string().url().default("http://localhost:3000"),
+    APP_NAME: z.string().default("UFSC Relata!"),
+    DATA_DIR: z.string().min(1).default("./data"),
+    SQLITE_DB_PATH: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    UPLOAD_PENDING_DIR: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    UPLOAD_PUBLIC_DIR: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    DATABASE_URL: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    UPLOAD_DIR: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    MAX_UPLOAD_SIZE_MB: z.coerce.number().int().positive().max(200).default(25),
+    TELEGRAM_BOT_TOKEN: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    TELEGRAM_CHAT_ID: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    MODERATION_SECRET: z
+      .string()
+      .min(32)
+      .default("development-only-secret-change-me-123"),
+    MODERATION_TOKEN_TTL_MINUTES: z.coerce.number().int().positive().default(720),
+    BREVO_API_KEY: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    BREVO_SENDER_EMAIL: z.preprocess(
+      emptyStringToUndefined,
+      z.string().email().optional(),
+    ),
+    BREVO_SENDER_NAME: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    SEED_DEMO_DATA: z
+      .enum(["true", "false"])
+      .default("true")
+      .transform((value) => value === "true"),
+    SUBMISSION_RATE_LIMIT_WINDOW_SECONDS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(300),
+    SUBMISSION_RATE_LIMIT_MAX_ATTEMPTS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(4),
+    PORT: z.coerce.number().int().positive().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (
+      value.BREVO_API_KEY &&
+      (!value.BREVO_SENDER_EMAIL || !value.BREVO_SENDER_NAME)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "BREVO_SENDER_EMAIL and BREVO_SENDER_NAME are required when BREVO_API_KEY is set.",
+        path: ["BREVO_SENDER_EMAIL"],
+      });
+    }
+  });
+
+const parsedEnv = envSchema.parse(process.env);
+
+const derivedSqliteDbPath =
+  parsedEnv.SQLITE_DB_PATH ??
+  parsedEnv.DATABASE_URL ??
+  `${parsedEnv.DATA_DIR}/db/app.db`;
+
+const derivedUploadPendingDir =
+  parsedEnv.UPLOAD_PENDING_DIR ??
+  (parsedEnv.UPLOAD_DIR ? `${parsedEnv.UPLOAD_DIR}/pending` : undefined) ??
+  `${parsedEnv.DATA_DIR}/uploads/pending`;
+
+const derivedUploadPublicDir =
+  parsedEnv.UPLOAD_PUBLIC_DIR ??
+  (parsedEnv.UPLOAD_DIR ? `${parsedEnv.UPLOAD_DIR}/public` : undefined) ??
+  `${parsedEnv.DATA_DIR}/uploads/public`;
+
+export const env = {
+  nodeEnv: parsedEnv.NODE_ENV,
+  appUrl: parsedEnv.APP_URL.replace(/\/$/, ""),
+  appName: parsedEnv.APP_NAME,
+  dataDir: parsedEnv.DATA_DIR,
+  sqliteDbPath: derivedSqliteDbPath,
+  uploadPendingDir: derivedUploadPendingDir,
+  uploadPublicDir: derivedUploadPublicDir,
+  maxUploadSizeMb: parsedEnv.MAX_UPLOAD_SIZE_MB,
+  maxUploadSizeBytes: parsedEnv.MAX_UPLOAD_SIZE_MB * 1024 * 1024,
+  telegramBotToken: parsedEnv.TELEGRAM_BOT_TOKEN ?? null,
+  telegramChatId: parsedEnv.TELEGRAM_CHAT_ID ?? null,
+  moderationSecret: parsedEnv.MODERATION_SECRET,
+  moderationTokenTtlMinutes: parsedEnv.MODERATION_TOKEN_TTL_MINUTES,
+  brevoApiKey: parsedEnv.BREVO_API_KEY ?? null,
+  brevoSenderEmail: parsedEnv.BREVO_SENDER_EMAIL ?? null,
+  brevoSenderName: parsedEnv.BREVO_SENDER_NAME ?? null,
+  seedDemoData: parsedEnv.SEED_DEMO_DATA,
+  submissionRateLimitWindowSeconds:
+    parsedEnv.SUBMISSION_RATE_LIMIT_WINDOW_SECONDS,
+  submissionRateLimitMaxAttempts:
+    parsedEnv.SUBMISSION_RATE_LIMIT_MAX_ATTEMPTS,
+  port: parsedEnv.PORT ?? 3000,
+} as const;
+
+export const flags = {
+  telegramConfigured: Boolean(env.telegramBotToken && env.telegramChatId),
+  brevoConfigured: Boolean(
+    env.brevoApiKey && env.brevoSenderEmail && env.brevoSenderName,
+  ),
+} as const;
+
+export function assertOperationalEnvironment() {
+  if (env.nodeEnv === "production" && !flags.telegramConfigured) {
+    throw new Error(
+      "TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are required in production.",
+    );
+  }
+
+  if (
+    env.nodeEnv === "production" &&
+    env.moderationSecret === "development-only-secret-change-me-123"
+  ) {
+    throw new Error(
+      "MODERATION_SECRET must be replaced with a production secret.",
+    );
+  }
+}

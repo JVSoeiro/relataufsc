@@ -1,0 +1,103 @@
+import { eq } from "drizzle-orm";
+
+import { db } from "@/db";
+import { complaints } from "@/db/schema";
+
+const demoComplaints = [
+  {
+    id: "demo-floripa-sidewalk",
+    description:
+      "Calçada quebrada próxima a uma rota de circulação intensa. O piso está irregular e dificulta a passagem com segurança, principalmente em dias de chuva.",
+    campusId: "florianopolis",
+    latitude: -27.6021,
+    longitude: -48.5182,
+    publicName: "Pessoa da comunidade UFSC",
+    createdAt: "2026-03-02T14:30:00.000Z",
+    approvedAt: "2026-03-03T10:00:00.000Z",
+  },
+  {
+    id: "demo-floripa-lighting",
+    description:
+      "A iluminação fica muito fraca neste trajeto à noite, deixando a área insegura e dificultando a circulação.",
+    campusId: "florianopolis",
+    latitude: -27.6072,
+    longitude: -48.5241,
+    publicName: null,
+    createdAt: "2026-03-09T18:10:00.000Z",
+    approvedAt: "2026-03-10T08:15:00.000Z",
+  },
+  {
+    id: "demo-joinville-accessibility",
+    description:
+      "A rampa de acessibilidade apresenta desgaste visível e um desnível brusco que precisa de reparo.",
+    campusId: "joinville",
+    latitude: -26.24065,
+    longitude: -48.8821,
+    publicName: "Colaborador anônimo",
+    createdAt: "2026-02-22T11:45:00.000Z",
+    approvedAt: "2026-02-22T17:20:00.000Z",
+  },
+  {
+    id: "demo-blumenau-leak",
+    description:
+      "Há um vazamento de água próximo ao acesso de salas de aula. O piso fica escorregadio e precisa de manutenção rápida.",
+    campusId: "blumenau",
+    latitude: -26.8774,
+    longitude: -49.1039,
+    publicName: null,
+    createdAt: "2026-03-15T09:25:00.000Z",
+    approvedAt: "2026-03-15T12:40:00.000Z",
+  },
+  {
+    id: "demo-curitibanos-furniture",
+    description:
+      "O banco de uma área externa de convivência está danificado e parcialmente instável para uso diário.",
+    campusId: "curitibanos",
+    latitude: -27.2851,
+    longitude: -50.5331,
+    publicName: "Observador do campus",
+    createdAt: "2026-02-28T16:50:00.000Z",
+    approvedAt: "2026-03-01T09:05:00.000Z",
+  },
+  {
+    id: "demo-ararangua-wires",
+    description:
+      "Há fiação exposta ao lado de um ponto de circulação externa. A área precisa de inspeção e isolamento.",
+    campusId: "ararangua",
+    latitude: -28.9421,
+    longitude: -49.4908,
+    publicName: null,
+    createdAt: "2026-03-19T13:35:00.000Z",
+    approvedAt: "2026-03-19T15:10:00.000Z",
+  },
+] as const;
+
+export function seedDemoComplaints() {
+  for (const demoComplaint of demoComplaints) {
+    const existing = db
+      .select({ id: complaints.id })
+      .from(complaints)
+      .where(eq(complaints.id, demoComplaint.id))
+      .get();
+
+    if (existing) {
+      continue;
+    }
+
+    db.insert(complaints)
+      .values({
+        id: demoComplaint.id,
+        description: demoComplaint.description,
+        campusId: demoComplaint.campusId,
+        latitude: demoComplaint.latitude,
+        longitude: demoComplaint.longitude,
+        publicName: demoComplaint.publicName,
+        status: "approved",
+        createdAt: demoComplaint.createdAt,
+        approvedAt: demoComplaint.approvedAt,
+        moderatedAt: demoComplaint.approvedAt,
+        submitterEmail: null,
+      })
+      .run();
+  }
+}
