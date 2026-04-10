@@ -24,14 +24,10 @@ export function BrandLockup({ compact = false }: BrandLockupProps) {
 
       <div className="flex min-h-11 min-w-[6.5rem] items-center justify-center rounded-[1.1rem] border border-white/70 bg-white/88 px-3 py-2 text-center text-[0.7rem] font-medium text-slate-500 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
         {brandConfig.partnerLogoSrc ? (
-          // Replace partnerLogoSrc in src/config/brand.ts with your uploaded asset path later.
-          <Image
+          <img
             alt={brandConfig.partnerLogoAlt}
             className="h-7 w-auto object-contain"
-            height={28}
             src={brandConfig.partnerLogoSrc}
-            unoptimized
-            width={112}
           />
         ) : (
           <span>{brandConfig.placeholderLabel}</span>
