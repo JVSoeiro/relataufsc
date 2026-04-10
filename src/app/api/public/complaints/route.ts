@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json(
     {
-      complaints: listPublicComplaintsByCampus(parsedQuery.data.campusId),
+      complaints: await listPublicComplaintsByCampus(parsedQuery.data.campusId),
     },
     {
       headers: {

@@ -1,43 +1,62 @@
-import { lt } from "drizzle-orm";
+import type { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 
-import { db, sqlite } from "@/db";
-import { submissionRateLimits } from "@/db/schema";
+import { pool } from "@/db";
 
-export function consumeSubmissionRateLimit(args: {
+type CountRow = RowDataPacket & {
+  total: number | string;
+};
+
+export async function consumeSubmissionRateLimit(args: {
   keyHash: string;
   createdAt: string;
   expiresAt: string;
   maxAttempts: number;
 }) {
-  const transaction = sqlite.transaction(() => {
-    db.delete(submissionRateLimits)
-      .where(lt(submissionRateLimits.expiresAt, args.createdAt))
-      .run();
+  const connection = await pool.getConnection();
 
-    const keyCount = sqlite
-      .prepare(
-        `
-          SELECT COUNT(*) AS total
-          FROM submission_rate_limits
-          WHERE key_hash = ? AND expires_at > ?
-        `,
-      )
-      .get(args.keyHash, args.createdAt) as { total: number };
+  try {
+    await connection.beginTransaction();
 
-    if (keyCount.total >= args.maxAttempts) {
+    await connection.execute<ResultSetHeader>(
+      `
+        DELETE FROM submission_rate_limits
+        WHERE expires_at < ?
+      `,
+      [args.createdAt],
+    );
+
+    const [countRows] = await connection.query<CountRow[]>(
+      `
+        SELECT COUNT(*) AS total
+        FROM submission_rate_limits
+        WHERE key_hash = ? AND expires_at > ?
+      `,
+      [args.keyHash, args.createdAt],
+    );
+
+    if (Number(countRows[0]?.total ?? 0) >= args.maxAttempts) {
+      await connection.rollback();
       return false;
     }
 
-    db.insert(submissionRateLimits)
-      .values({
-        keyHash: args.keyHash,
-        createdAt: args.createdAt,
-        expiresAt: args.expiresAt,
-      })
-      .run();
+    await connection.execute<ResultSetHeader>(
+      `
+        INSERT INTO submission_rate_limits (
+          key_hash,
+          created_at,
+          expires_at
+        ) VALUES (?, ?, ?)
+      `,
+      [args.keyHash, args.createdAt, args.expiresAt],
+    );
+
+    await connection.commit();
 
     return true;
-  });
-
-  return transaction();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 }

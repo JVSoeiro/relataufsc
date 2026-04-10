@@ -1,7 +1,6 @@
-import { eq } from "drizzle-orm";
+import type { ResultSetHeader } from "mysql2/promise";
 
-import { db } from "@/db";
-import { complaints } from "@/db/schema";
+import { pool } from "@/db";
 
 const demoComplaints = [
   {
@@ -72,32 +71,35 @@ const demoComplaints = [
   },
 ] as const;
 
-export function seedDemoComplaints() {
+export async function seedDemoComplaints() {
   for (const demoComplaint of demoComplaints) {
-    const existing = db
-      .select({ id: complaints.id })
-      .from(complaints)
-      .where(eq(complaints.id, demoComplaint.id))
-      .get();
-
-    if (existing) {
-      continue;
-    }
-
-    db.insert(complaints)
-      .values({
-        id: demoComplaint.id,
-        description: demoComplaint.description,
-        campusId: demoComplaint.campusId,
-        latitude: demoComplaint.latitude,
-        longitude: demoComplaint.longitude,
-        publicName: demoComplaint.publicName,
-        status: "approved",
-        createdAt: demoComplaint.createdAt,
-        approvedAt: demoComplaint.approvedAt,
-        moderatedAt: demoComplaint.approvedAt,
-        submitterEmail: null,
-      })
-      .run();
+    await pool.execute<ResultSetHeader>(
+      `
+        INSERT IGNORE INTO complaints (
+          id,
+          description,
+          campus_id,
+          latitude,
+          longitude,
+          public_name,
+          status,
+          created_at,
+          approved_at,
+          moderated_at,
+          submitter_email
+        ) VALUES (?, ?, ?, ?, ?, ?, 'approved', ?, ?, ?, NULL)
+      `,
+      [
+        demoComplaint.id,
+        demoComplaint.description,
+        demoComplaint.campusId,
+        demoComplaint.latitude,
+        demoComplaint.longitude,
+        demoComplaint.publicName,
+        demoComplaint.createdAt,
+        demoComplaint.approvedAt,
+        demoComplaint.approvedAt,
+      ],
+    );
   }
 }

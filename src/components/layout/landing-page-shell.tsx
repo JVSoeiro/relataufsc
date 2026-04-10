@@ -64,7 +64,6 @@ export function LandingPageShell({
   const [draftLocation, setDraftLocation] = useState<DraftLocation | null>(null);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [surfaceNotice, setSurfaceNotice] = useState<SurfaceNotice>(null);
-  const hasHydratedRef = useRef(false);
   const noticeTimeoutRef = useRef<number | null>(null);
 
   function clearSurfaceNotice() {
@@ -129,15 +128,12 @@ export function LandingPageShell({
   });
 
   useEffect(() => {
-    if (!hasHydratedRef.current) {
-      hasHydratedRef.current = true;
-      return;
-    }
-
     void fetchCampusComplaints(activeCampusId);
   }, [activeCampusId]);
 
   useEffect(() => {
+    void refreshStats();
+
     const interval = window.setInterval(() => {
       void refreshStats();
     }, 60_000);

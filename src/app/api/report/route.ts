@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const rateLimit = assertSubmissionRateLimit(request);
+    const rateLimit = await assertSubmissionRateLimit(request);
 
     if (!rateLimit.allowed) {
       return NextResponse.json(

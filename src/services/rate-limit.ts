@@ -20,13 +20,13 @@ function hashSubmissionKey(value: string) {
     .digest("hex");
 }
 
-export function assertSubmissionRateLimit(request: Request) {
+export async function assertSubmissionRateLimit(request: Request) {
   const now = new Date();
   const createdAt = now.toISOString();
   const expiresAt = new Date(
     now.getTime() + env.submissionRateLimitWindowSeconds * 1000,
   ).toISOString();
-  const allowed = consumeSubmissionRateLimit({
+  const allowed = await consumeSubmissionRateLimit({
     keyHash: hashSubmissionKey(extractSubmissionKey(request)),
     createdAt,
     expiresAt,

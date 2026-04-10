@@ -13,13 +13,9 @@ const envSchema = z
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
-    APP_URL: z.string().url().default("http://localhost:3000"),
+    APP_URL: z.string().url().default("http://localhost:5000"),
     APP_NAME: z.string().default("UFSC Relata!"),
     DATA_DIR: z.string().min(1).default("./data"),
-    SQLITE_DB_PATH: z.preprocess(
-      emptyStringToUndefined,
-      z.string().min(1).optional(),
-    ),
     UPLOAD_PENDING_DIR: z.preprocess(
       emptyStringToUndefined,
       z.string().min(1).optional(),
@@ -94,11 +90,6 @@ const envSchema = z
 
 const parsedEnv = envSchema.parse(process.env);
 
-const derivedSqliteDbPath =
-  parsedEnv.SQLITE_DB_PATH ??
-  parsedEnv.DATABASE_URL ??
-  `${parsedEnv.DATA_DIR}/db/app.db`;
-
 const derivedUploadPendingDir =
   parsedEnv.UPLOAD_PENDING_DIR ??
   (parsedEnv.UPLOAD_DIR ? `${parsedEnv.UPLOAD_DIR}/pending` : undefined) ??
@@ -114,7 +105,7 @@ export const env = {
   appUrl: parsedEnv.APP_URL.replace(/\/$/, ""),
   appName: parsedEnv.APP_NAME,
   dataDir: parsedEnv.DATA_DIR,
-  sqliteDbPath: derivedSqliteDbPath,
+  databaseUrl: parsedEnv.DATABASE_URL ?? null,
   uploadPendingDir: derivedUploadPendingDir,
   uploadPublicDir: derivedUploadPublicDir,
   maxUploadSizeMb: parsedEnv.MAX_UPLOAD_SIZE_MB,
@@ -131,10 +122,11 @@ export const env = {
     parsedEnv.SUBMISSION_RATE_LIMIT_WINDOW_SECONDS,
   submissionRateLimitMaxAttempts:
     parsedEnv.SUBMISSION_RATE_LIMIT_MAX_ATTEMPTS,
-  port: parsedEnv.PORT ?? 3000,
+  port: parsedEnv.PORT ?? 5000,
 } as const;
 
 export const flags = {
+  databaseConfigured: Boolean(env.databaseUrl),
   telegramConfigured: Boolean(env.telegramBotToken && env.telegramChatId),
   brevoConfigured: Boolean(
     env.brevoApiKey && env.brevoSenderEmail && env.brevoSenderName,
@@ -142,6 +134,10 @@ export const flags = {
 } as const;
 
 export function assertOperationalEnvironment() {
+  if (env.nodeEnv === "production" && !flags.databaseConfigured) {
+    throw new Error("DATABASE_URL is required in production.");
+  }
+
   if (env.nodeEnv === "production" && !flags.telegramConfigured) {
     throw new Error(
       "TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are required in production.",

@@ -34,7 +34,6 @@ export function ensureStorageDirectories() {
   const publicRootExistedBeforeBootstrap = existsSync(publicUploadRoot);
 
   mkdirSync(dataRoot, { recursive: true });
-  mkdirSync(dirname(resolveRuntimePath(env.sqliteDbPath)), { recursive: true });
   mkdirSync(pendingUploadRoot, { recursive: true });
   mkdirSync(publicUploadRoot, { recursive: true });
 

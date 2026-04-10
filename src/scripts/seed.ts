@@ -6,8 +6,8 @@ async function main() {
   const { runMigrations } = await import("../db/migrations");
   const { seedDemoComplaints } = await import("../db/seed");
 
-  runMigrations();
-  seedDemoComplaints();
+  await runMigrations();
+  await seedDemoComplaints();
   console.log("Demo complaints seeded.");
 }
 

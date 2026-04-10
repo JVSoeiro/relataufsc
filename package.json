@@ -15,11 +15,11 @@
     "db:bootstrap": "tsx src/scripts/bootstrap.ts"
   },
   "dependencies": {
-    "better-sqlite3": "^12.4.1",
     "drizzle-orm": "^0.44.6",
     "framer-motion": "^12.23.24",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.542.0",
+    "mysql2": "^3.22.0",
     "next": "16.2.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -31,7 +31,6 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/leaflet": "^1.9.21",
     "@types/node": "^20",
     "@types/react": "^19",

@@ -5,7 +5,7 @@ loadEnvConfig(process.cwd());
 async function main() {
   const { runMigrations } = await import("../db/migrations");
 
-  runMigrations();
+  await runMigrations();
   console.log("Migrations applied.");
 }
 

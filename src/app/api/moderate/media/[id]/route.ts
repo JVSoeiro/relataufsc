@@ -30,7 +30,7 @@ export async function GET(
     return new Response("Not found", { status: 404 });
   }
 
-  const complaint = getPendingComplaintForModeration(id);
+  const complaint = await getPendingComplaintForModeration(id);
 
   if (!complaint?.mediaPath) {
     return new Response("Not found", { status: 404 });

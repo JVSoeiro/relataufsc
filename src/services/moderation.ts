@@ -26,7 +26,7 @@ export async function moderateComplaintFromToken(
     };
   }
 
-  const complaint = getPendingComplaintForModeration(
+  const complaint = await getPendingComplaintForModeration(
     tokenResult.payload.complaintId,
   );
 
@@ -47,7 +47,7 @@ export async function moderateComplaintFromToken(
 
   // Privacy-first order: capture the email in memory, atomically conclude moderation,
   // and null the stored email immediately before any external side effects run.
-  const changed = applyModerationDecision({
+  const changed = await applyModerationDecision({
     complaintId: complaint.id,
     action,
     moderatedAt: now,
@@ -66,7 +66,7 @@ export async function moderateComplaintFromToken(
       moveUploadToPublic(complaint.mediaPath, nextMediaPath);
     } catch (error) {
       console.error("Failed to publish media for approved complaint:", error);
-      clearComplaintMedia(complaint.id);
+      await clearComplaintMedia(complaint.id);
     }
   }
 

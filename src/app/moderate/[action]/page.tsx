@@ -61,7 +61,9 @@ export default async function ModerationPage({
     return <UnavailableState />;
   }
 
-  const complaint = getPendingComplaintForModeration(tokenResult.payload.complaintId);
+  const complaint = await getPendingComplaintForModeration(
+    tokenResult.payload.complaintId,
+  );
 
   if (!complaint) {
     return <UnavailableState />;

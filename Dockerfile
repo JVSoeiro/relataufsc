@@ -25,9 +25,8 @@ RUN npm run build
 FROM base AS runner
 
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=5000
 ENV DATA_DIR=/app/data
-ENV SQLITE_DB_PATH=/app/data/db/app.db
 ENV UPLOAD_PENDING_DIR=/app/data/uploads/pending
 ENV UPLOAD_PUBLIC_DIR=/app/data/uploads/public
 
@@ -43,10 +42,10 @@ COPY --from=builder --chown=node:node /app/next.config.ts ./next.config.ts
 
 RUN npm prune --omit=dev
 RUN npm cache clean --force
-RUN mkdir -p /app/data/db /app/data/uploads/pending /app/data/uploads/public && chown -R node:node /app
+RUN mkdir -p /app/data/uploads/pending /app/data/uploads/public && chown -R node:node /app
 
 USER node
 
-EXPOSE 3000
+EXPOSE 5000
 
 CMD ["npm", "run", "start:prod"]

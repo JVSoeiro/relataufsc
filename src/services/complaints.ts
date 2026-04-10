@@ -58,11 +58,13 @@ function serializePublicComplaint(row: {
   };
 }
 
-export function listPublicComplaintsByCampus(campusId: CampusId) {
-  return listApprovedComplaintsByCampus(campusId).map(serializePublicComplaint);
+export async function listPublicComplaintsByCampus(campusId: CampusId) {
+  const rows = await listApprovedComplaintsByCampus(campusId);
+
+  return rows.map(serializePublicComplaint);
 }
 
-export function getApprovedComplaintCount() {
+export async function getApprovedComplaintCount() {
   return getApprovedComplaintCountFromRepository();
 }
 
@@ -83,7 +85,7 @@ export async function createPendingComplaint(input: PendingComplaintInput) {
       uploadedMedia = await savePendingUpload(input.media);
     }
 
-    insertPendingComplaint({
+    await insertPendingComplaint({
       id: complaintId,
       campusId: input.campusId,
       description: input.description,

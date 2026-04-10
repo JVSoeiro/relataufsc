@@ -1,4 +1,4 @@
-import { env } from "@/lib/env";
+import { env, flags } from "@/lib/env";
 import { runMigrations } from "@/db/migrations";
 import { seedDemoComplaints } from "@/db/seed";
 import { ensureStorageDirectories } from "@/services/storage";
@@ -10,11 +10,15 @@ export async function bootstrapApp() {
     return;
   }
 
+  if (!flags.databaseConfigured) {
+    throw new Error("DATABASE_URL is required to bootstrap UFSC Relata.");
+  }
+
   ensureStorageDirectories();
-  runMigrations();
+  await runMigrations();
 
   if (env.seedDemoData) {
-    seedDemoComplaints();
+    await seedDemoComplaints();
   }
 
   hasBootstrapped = true;

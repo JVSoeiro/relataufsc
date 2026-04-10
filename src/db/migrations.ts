@@ -1,54 +1,65 @@
-import { mkdirSync, readdirSync, readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { readdirSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 
-import Database from "better-sqlite3";
+import mysql, { type RowDataPacket } from "mysql2/promise";
 
-import { env } from "@/lib/env";
-import { resolveRuntimePath } from "@/lib/runtime-paths";
+import { getMysqlConnectionOptions } from "@/db/mysql-connection";
 
-function openMigrationDatabase() {
-  const databasePath = resolveRuntimePath(env.sqliteDbPath);
-  mkdirSync(dirname(databasePath), { recursive: true });
+type AppliedMigrationRow = RowDataPacket & {
+  name: string;
+};
 
-  const sqlite = new Database(databasePath);
-  sqlite.pragma("journal_mode = WAL");
-  sqlite.pragma("foreign_keys = ON");
-  sqlite.exec(`
+async function openMigrationConnection() {
+  const connection = await mysql.createConnection({
+    ...getMysqlConnectionOptions(),
+    multipleStatements: true,
+  });
+
+  await connection.execute(`
     CREATE TABLE IF NOT EXISTS app_migrations (
-      name TEXT PRIMARY KEY NOT NULL,
-      applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
+      name VARCHAR(255) PRIMARY KEY NOT NULL,
+      applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
 
-  return sqlite;
+  return connection;
 }
 
-export function runMigrations() {
-  const sqlite = openMigrationDatabase();
+export async function runMigrations() {
+  const connection = await openMigrationConnection();
   const migrationsDirectory = resolve(process.cwd(), "drizzle");
   const migrationFiles = readdirSync(migrationsDirectory)
     .filter((fileName) => fileName.endsWith(".sql"))
     .sort();
 
-  for (const migrationFile of migrationFiles) {
-    const alreadyApplied = sqlite
-      .prepare("SELECT name FROM app_migrations WHERE name = ?")
-      .get(migrationFile);
+  try {
+    for (const migrationFile of migrationFiles) {
+      const [alreadyAppliedRows] = await connection.execute<AppliedMigrationRow[]>(
+        "SELECT name FROM app_migrations WHERE name = ? LIMIT 1",
+        [migrationFile],
+      );
 
-    if (alreadyApplied) {
-      continue;
+      if (alreadyAppliedRows.length > 0) {
+        continue;
+      }
+
+      const sql = readFileSync(join(migrationsDirectory, migrationFile), "utf8");
+
+      await connection.beginTransaction();
+
+      try {
+        await connection.query(sql);
+        await connection.execute(
+          "INSERT INTO app_migrations (name) VALUES (?)",
+          [migrationFile],
+        );
+        await connection.commit();
+      } catch (error) {
+        await connection.rollback();
+        throw error;
+      }
     }
-
-    const sql = readFileSync(join(migrationsDirectory, migrationFile), "utf8");
-    const transaction = sqlite.transaction(() => {
-      sqlite.exec(sql);
-      sqlite
-        .prepare("INSERT INTO app_migrations (name) VALUES (?)")
-        .run(migrationFile);
-    });
-
-    transaction();
+  } finally {
+    await connection.end();
   }
-
-  sqlite.close();
 }

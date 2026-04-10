@@ -11,7 +11,7 @@ export async function GET() {
 
   return NextResponse.json(
     {
-      totalApprovedComplaints: getApprovedComplaintCount(),
+      totalApprovedComplaints: await getApprovedComplaintCount(),
     },
     {
       headers: {

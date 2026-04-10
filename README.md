@@ -1,6 +1,6 @@
 # UFSC Relata!
 
-O UFSC Relata! é um MVP em produção para relatar problemas visíveis de infraestrutura nos campi da UFSC por meio de um mapa público. A aplicação roda como um único container Next.js, com SQLite, uploads persistidos em disco, moderação por Telegram e e-mail transacional opcional via Brevo.
+O UFSC Relata! é um MVP em produção para relatar problemas visíveis de infraestrutura nos campi da UFSC por meio de um mapa público. A aplicação roda como um único container Next.js, com MySQL/MariaDB, uploads persistidos em disco, moderação por Telegram e e-mail transacional opcional via Brevo.
 
 ## Escopo
 
@@ -14,7 +14,7 @@ O UFSC Relata! é um MVP em produção para relatar problemas visíveis de infra
 
 ## Modelo de persistência
 
-O schema SQLite é propositalmente mínimo e orientado à privacidade.
+O schema MySQL/MariaDB é propositalmente mínimo e orientado à privacidade.
 
 Tabela principal: `complaints`
 
@@ -141,7 +141,6 @@ A raiz persistente foi desenhada para `/app/data`.
 
 Estrutura recomendada:
 
-- `/app/data/db/app.db`
 - `/app/data/uploads/pending/...`
 - `/app/data/uploads/public/...`
 
@@ -169,8 +168,8 @@ Principais variáveis:
 
 - `APP_URL`
 - `APP_NAME`
+- `DATABASE_URL`
 - `DATA_DIR`
-- `SQLITE_DB_PATH`
 - `UPLOAD_PENDING_DIR`
 - `UPLOAD_PUBLIC_DIR`
 - `MAX_UPLOAD_SIZE_MB`
@@ -184,9 +183,10 @@ Principais variáveis:
 - `SUBMISSION_RATE_LIMIT_WINDOW_SECONDS`
 - `SUBMISSION_RATE_LIMIT_MAX_ATTEMPTS`
 
-Compatibilidade legada:
+Notas:
 
-- A aplicação ainda aceita `DATABASE_URL` e `UPLOAD_DIR` como fallback, mas a configuração preferida é o modelo explícito de caminhos acima.
+- `DATABASE_URL` é obrigatória em runtime e deve apontar para o banco MySQL/MariaDB do Dokploy.
+- Se o nome do banco tiver espaços, use URL encoding, por exemplo `%20`.
 
 ## Desenvolvimento local
 
@@ -230,7 +230,7 @@ docker build -t ufsc-relata .
 Execução:
 
 ```bash
-docker run --rm -p 3000:3000 \
+docker run --rm -p 5000:5000 \
   --env-file .env \
   -v "$(pwd)/data:/app/data" \
   ufsc-relata
@@ -239,9 +239,9 @@ docker run --rm -p 3000:3000 \
 Os defaults do container estão alinhados com:
 
 - `DATA_DIR=/app/data`
-- `SQLITE_DB_PATH=/app/data/db/app.db`
 - `UPLOAD_PENDING_DIR=/app/data/uploads/pending`
 - `UPLOAD_PUBLIC_DIR=/app/data/uploads/public`
+- `PORT=5000`
 
 O container roda com o usuário não-root `node`. O volume montado precisa ser gravável por esse usuário, ou por uma configuração de permissões compatível no host.
 
@@ -251,14 +251,15 @@ Configuração recomendada no Dokploy:
 
 1. Faça o deploy a partir do `Dockerfile` incluído no projeto
 2. Configure as variáveis de ambiente com base em `.env.example`
-3. Monte um volume persistente em `/app/data`
-4. Exponha a porta `3000`
+3. Monte um volume persistente em `/app/data` para uploads
+4. Exponha a porta `5000`
 5. Defina `APP_URL` com a URL HTTPS final do site
-6. Garanta que o volume persistente seja gravável pelo usuário do container
+6. Configure `DATABASE_URL` com a URL interna do banco do Dokploy
+7. Garanta que o volume persistente seja gravável pelo usuário do container
 
 Comportamento operacional:
 
-- No primeiro boot, a app cria `/app/data/db`, `/app/data/uploads/pending` e `/app/data/uploads/public` caso não existam
+- No primeiro boot, a app cria `/app/data/uploads/pending` e `/app/data/uploads/public` caso não existam
 - As migrações rodam automaticamente no bootstrap de inicialização
 - O seed demo pode ser desativado com `SEED_DEMO_DATA=false`
 

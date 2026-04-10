@@ -1,8 +1,7 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import type { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 
 import { type CampusId } from "@/config/campuses";
-import { db } from "@/db";
-import { complaints } from "@/db/schema";
+import { pool } from "@/db";
 import type { MediaKind } from "@/lib/constants";
 
 type InsertPendingComplaintInput = {
@@ -20,84 +19,141 @@ type InsertPendingComplaintInput = {
   createdAt: string;
 };
 
-export function insertPendingComplaint(input: InsertPendingComplaintInput) {
-  db.insert(complaints)
-    .values({
-      id: input.id,
-      campusId: input.campusId,
-      description: input.description,
-      latitude: input.latitude,
-      longitude: input.longitude,
-      mediaPath: input.mediaPath,
-      mediaKind: input.mediaKind,
-      mediaMimeType: input.mediaMimeType,
-      mediaSizeBytes: input.mediaSizeBytes,
-      publicName: input.publicName,
-      submitterEmail: input.submitterEmail,
-      status: "pending",
-      createdAt: input.createdAt,
-    })
-    .run();
+type ApprovedComplaintRow = RowDataPacket & {
+  id: string;
+  description: string;
+  campusId: string;
+  latitude: number;
+  longitude: number;
+  mediaPath: string | null;
+  mediaKind: string | null;
+  mediaMimeType: string | null;
+  publicName: string | null;
+  approvedAt: string | null;
+  createdAt: string;
+};
+
+type PendingComplaintRow = RowDataPacket & {
+  id: string;
+  campusId: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  mediaPath: string | null;
+  mediaKind: string | null;
+  mediaMimeType: string | null;
+  mediaSizeBytes: number | null;
+  publicName: string | null;
+  submitterEmail: string | null;
+  createdAt: string;
+  status: string;
+};
+
+type CountRow = RowDataPacket & {
+  total: number | string;
+};
+
+export async function insertPendingComplaint(input: InsertPendingComplaintInput) {
+  await pool.execute<ResultSetHeader>(
+    `
+      INSERT INTO complaints (
+        id,
+        campus_id,
+        description,
+        latitude,
+        longitude,
+        media_path,
+        media_kind,
+        media_mime_type,
+        media_size_bytes,
+        public_name,
+        submitter_email,
+        status,
+        created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
+    `,
+    [
+      input.id,
+      input.campusId,
+      input.description,
+      input.latitude,
+      input.longitude,
+      input.mediaPath,
+      input.mediaKind,
+      input.mediaMimeType,
+      input.mediaSizeBytes,
+      input.publicName,
+      input.submitterEmail,
+      input.createdAt,
+    ],
+  );
 }
 
-export function listApprovedComplaintsByCampus(campusId: CampusId) {
-  return db
-    .select({
-      id: complaints.id,
-      description: complaints.description,
-      campusId: complaints.campusId,
-      latitude: complaints.latitude,
-      longitude: complaints.longitude,
-      mediaPath: complaints.mediaPath,
-      mediaKind: complaints.mediaKind,
-      mediaMimeType: complaints.mediaMimeType,
-      publicName: complaints.publicName,
-      approvedAt: complaints.approvedAt,
-      createdAt: complaints.createdAt,
-    })
-    .from(complaints)
-    .where(
-      and(eq(complaints.status, "approved"), eq(complaints.campusId, campusId)),
-    )
-    .orderBy(desc(complaints.createdAt))
-    .all();
+export async function listApprovedComplaintsByCampus(campusId: CampusId) {
+  const [rows] = await pool.query<ApprovedComplaintRow[]>(
+    `
+      SELECT
+        id,
+        description,
+        campus_id AS campusId,
+        latitude,
+        longitude,
+        media_path AS mediaPath,
+        media_kind AS mediaKind,
+        media_mime_type AS mediaMimeType,
+        public_name AS publicName,
+        approved_at AS approvedAt,
+        created_at AS createdAt
+      FROM complaints
+      WHERE status = 'approved' AND campus_id = ?
+      ORDER BY created_at DESC
+    `,
+    [campusId],
+  );
+
+  return rows;
 }
 
-export function getApprovedComplaintCount() {
-  const result = db
-    .select({
-      total: sql<number>`count(*)`,
-    })
-    .from(complaints)
-    .where(eq(complaints.status, "approved"))
-    .get();
+export async function getApprovedComplaintCount() {
+  const [rows] = await pool.query<CountRow[]>(
+    `
+      SELECT COUNT(*) AS total
+      FROM complaints
+      WHERE status = 'approved'
+    `,
+  );
 
-  return result?.total ?? 0;
+  return Number(rows[0]?.total ?? 0);
 }
 
-export function getPendingComplaintForModeration(id: string) {
-  return db
-    .select({
-      id: complaints.id,
-      campusId: complaints.campusId,
-      description: complaints.description,
-      latitude: complaints.latitude,
-      longitude: complaints.longitude,
-      mediaPath: complaints.mediaPath,
-      mediaKind: complaints.mediaKind,
-      mediaMimeType: complaints.mediaMimeType,
-      mediaSizeBytes: complaints.mediaSizeBytes,
-      publicName: complaints.publicName,
-      submitterEmail: complaints.submitterEmail,
-      createdAt: complaints.createdAt,
-      status: complaints.status,
-    })
-    .from(complaints)
-    .where(and(eq(complaints.id, id), eq(complaints.status, "pending")))
-    .get();
+export async function getPendingComplaintForModeration(id: string) {
+  const [rows] = await pool.query<PendingComplaintRow[]>(
+    `
+      SELECT
+        id,
+        campus_id AS campusId,
+        description,
+        latitude,
+        longitude,
+        media_path AS mediaPath,
+        media_kind AS mediaKind,
+        media_mime_type AS mediaMimeType,
+        media_size_bytes AS mediaSizeBytes,
+        public_name AS publicName,
+        submitter_email AS submitterEmail,
+        created_at AS createdAt,
+        status
+      FROM complaints
+      WHERE id = ? AND status = 'pending'
+      LIMIT 1
+    `,
+    [id],
+  );
+
+  return rows[0] ?? null;
 }
 
-export function applyModerationDecision(args: {
+export async function applyModerationDecision(args: {
   complaintId: string;
   action: "approve" | "reject";
   moderatedAt: string;
@@ -105,31 +161,40 @@ export function applyModerationDecision(args: {
 }) {
   const isApproval = args.action === "approve";
 
-  const result = db
-    .update(complaints)
-    .set({
-      status: isApproval ? "approved" : "rejected",
-      approvedAt: isApproval ? args.moderatedAt : null,
-      moderatedAt: args.moderatedAt,
-      mediaPath: isApproval ? args.nextMediaPath : null,
-      submitterEmail: null,
-    })
-    .where(
-      and(eq(complaints.id, args.complaintId), eq(complaints.status, "pending")),
-    )
-    .run();
+  const [result] = await pool.execute<ResultSetHeader>(
+    `
+      UPDATE complaints
+      SET
+        status = ?,
+        approved_at = ?,
+        moderated_at = ?,
+        media_path = ?,
+        submitter_email = NULL
+      WHERE id = ? AND status = 'pending'
+    `,
+    [
+      isApproval ? "approved" : "rejected",
+      isApproval ? args.moderatedAt : null,
+      args.moderatedAt,
+      isApproval ? args.nextMediaPath : null,
+      args.complaintId,
+    ],
+  );
 
-  return result.changes > 0;
+  return result.affectedRows > 0;
 }
 
-export function clearComplaintMedia(id: string) {
-  db.update(complaints)
-    .set({
-      mediaPath: null,
-      mediaKind: null,
-      mediaMimeType: null,
-      mediaSizeBytes: null,
-    })
-    .where(eq(complaints.id, id))
-    .run();
+export async function clearComplaintMedia(id: string) {
+  await pool.execute<ResultSetHeader>(
+    `
+      UPDATE complaints
+      SET
+        media_path = NULL,
+        media_kind = NULL,
+        media_mime_type = NULL,
+        media_size_bytes = NULL
+      WHERE id = ?
+    `,
+    [id],
+  );
 }

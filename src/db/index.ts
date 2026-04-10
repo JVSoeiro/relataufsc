@@ -1,39 +1,39 @@
-import Database from "better-sqlite3";
-import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import type { Pool } from "mysql2/promise";
+import mysql from "mysql2/promise";
+import { drizzle } from "drizzle-orm/mysql2";
 
-import { env } from "@/lib/env";
-import { resolveRuntimePath } from "@/lib/runtime-paths";
+import { getMysqlConnectionOptions } from "@/db/mysql-connection";
 import * as schema from "@/db/schema";
 
-type SqliteDatabase = InstanceType<typeof Database>;
+function createPoolInstance() {
+  return mysql.createPool({
+    ...getMysqlConnectionOptions(),
+    connectionLimit: 10,
+    enableKeepAlive: true,
+    idleTimeout: 60_000,
+    maxIdle: 10,
+    queueLimit: 0,
+    waitForConnections: true,
+  });
+}
 
-function createDrizzleDatabase(sqlite: SqliteDatabase) {
-  return drizzle(sqlite, { schema });
+function createDrizzleDatabase(pool: Pool) {
+  return drizzle(pool, { schema, mode: "default" });
 }
 
 type AppDatabase = ReturnType<typeof createDrizzleDatabase>;
 
-let sqliteInstance: SqliteDatabase | null = null;
+let poolInstance: Pool | null = null;
 let dbInstance: AppDatabase | null = null;
 
-function ensureSqliteInstance() {
-  if (sqliteInstance) {
-    return sqliteInstance;
+function ensurePoolInstance() {
+  if (poolInstance) {
+    return poolInstance;
   }
 
-  const databasePath = resolveRuntimePath(env.sqliteDbPath);
+  poolInstance = createPoolInstance();
 
-  mkdirSync(dirname(databasePath), { recursive: true });
-
-  const sqlite = new Database(databasePath);
-  sqlite.pragma("journal_mode = WAL");
-  sqlite.pragma("foreign_keys = ON");
-
-  sqliteInstance = sqlite;
-
-  return sqliteInstance;
+  return poolInstance;
 }
 
 function ensureDbInstance() {
@@ -41,19 +41,19 @@ function ensureDbInstance() {
     return dbInstance;
   }
 
-  dbInstance = createDrizzleDatabase(ensureSqliteInstance());
+  dbInstance = createDrizzleDatabase(ensurePoolInstance());
 
   return dbInstance;
 }
 
-export const db = new Proxy({} as AppDatabase, {
+export const pool = new Proxy({} as Pool, {
   get(_target, property, receiver) {
-    return Reflect.get(ensureDbInstance(), property, receiver);
+    return Reflect.get(ensurePoolInstance(), property, receiver);
   },
 });
 
-export const sqlite = new Proxy({} as SqliteDatabase, {
+export const db = new Proxy({} as AppDatabase, {
   get(_target, property, receiver) {
-    return Reflect.get(ensureSqliteInstance(), property, receiver);
+    return Reflect.get(ensureDbInstance(), property, receiver);
   },
 });
