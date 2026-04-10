@@ -47,5 +47,6 @@ RUN mkdir -p /app/data/uploads/pending /app/data/uploads/public && chown -R node
 USER node
 
 EXPOSE 5000
+CMD ["npm", "run", "start:prod"]
 
 CMD ["npm", "run", "start:prod"]
