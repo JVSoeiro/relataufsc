@@ -1,8 +1,6 @@
-import { readFile } from "node:fs/promises";
-
 import {
   getMimeTypeFromStoredPath,
-  resolveStoredMediaPath,
+  readStoredMedia,
 } from "@/services/storage";
 
 export const runtime = "nodejs";
@@ -20,7 +18,7 @@ export async function GET(
   }
 
   try {
-    const fileBuffer = await readFile(resolveStoredMediaPath(relativePath));
+    const fileBuffer = await readStoredMedia(relativePath);
 
     return new Response(fileBuffer, {
       headers: {

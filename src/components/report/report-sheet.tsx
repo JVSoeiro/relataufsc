@@ -130,12 +130,22 @@ export function ReportSheet({
         method: "POST",
         body: formData,
       });
-      const payload = (await response.json()) as {
-        error?: string;
-      };
+      const responseText = await response.text();
+      let payload: { error?: string } | null = null;
+
+      if (responseText) {
+        try {
+          payload = JSON.parse(responseText) as { error?: string };
+        } catch {
+          payload = null;
+        }
+      }
 
       if (!response.ok) {
-        throw new Error(payload.error ?? "Não foi possível enviar o relato.");
+        throw new Error(
+          payload?.error ??
+            "Não foi possível enviar o relato agora. Tente novamente em instantes.",
+        );
       }
 
       setSubmissionState("success");

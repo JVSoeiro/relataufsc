@@ -63,7 +63,7 @@ export async function moderateComplaintFromToken(
 
   if (shouldApprove && complaint.mediaPath && nextMediaPath) {
     try {
-      moveUploadToPublic(complaint.mediaPath, nextMediaPath);
+      await moveUploadToPublic(complaint.mediaPath, nextMediaPath);
     } catch (error) {
       console.error("Failed to publish media for approved complaint:", error);
       await clearComplaintMedia(complaint.id);
@@ -72,7 +72,7 @@ export async function moderateComplaintFromToken(
 
   if (!shouldApprove && complaint.mediaPath) {
     try {
-      deleteStoredMedia(complaint.mediaPath);
+      await deleteStoredMedia(complaint.mediaPath);
     } catch (error) {
       console.error("Failed to delete rejected media:", error);
     }

@@ -132,7 +132,7 @@ export async function createMockComplaint(input: MockPendingComplaintInput) {
     const storedUpload = await savePendingUpload(input.media);
     const publicRelativePath = getPublicDestinationPath(storedUpload.relativePath);
 
-    moveUploadToPublic(storedUpload.relativePath, publicRelativePath);
+    await moveUploadToPublic(storedUpload.relativePath, publicRelativePath);
 
     mediaUrl = createPublicMediaUrl(publicRelativePath);
     mediaKind = storedUpload.mediaKind;

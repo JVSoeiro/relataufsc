@@ -1,8 +1,6 @@
-import { readFile } from "node:fs/promises";
-
 import { bootstrapApp } from "@/db/bootstrap";
 import { getPendingComplaintForModeration } from "@/db/repositories/complaints-repository";
-import { resolveStoredMediaPath } from "@/services/storage";
+import { readStoredMedia } from "@/services/storage";
 import { readModerationToken } from "@/services/tokens";
 
 export const runtime = "nodejs";
@@ -37,7 +35,7 @@ export async function GET(
   }
 
   try {
-    const fileBuffer = await readFile(resolveStoredMediaPath(complaint.mediaPath));
+    const fileBuffer = await readStoredMedia(complaint.mediaPath);
 
     return new Response(fileBuffer, {
       headers: {

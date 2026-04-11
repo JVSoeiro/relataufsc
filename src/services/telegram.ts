@@ -1,5 +1,4 @@
 import { basename } from "node:path";
-import { readFile, stat } from "node:fs/promises";
 import { lookup } from "node:dns/promises";
 
 import { campusById, type CampusId } from "@/config/campuses";
@@ -10,7 +9,7 @@ import {
   formatDateTime,
   truncateText,
 } from "@/lib/format";
-import { resolveStoredMediaPath } from "@/services/storage";
+import { describeStoredMedia, readStoredMedia } from "@/services/storage";
 import { createModerationToken } from "@/services/tokens";
 
 type PendingComplaintForTelegram = {
@@ -134,16 +133,9 @@ async function logDetailedTelegramError(
       dnsInfo = `lookup-error:${String(e)}`;
     }
 
-    let fileInfo: string | null = null;
-    if (opts?.complaint?.mediaPath) {
-      try {
-        const abs = resolveStoredMediaPath(opts.complaint.mediaPath);
-        const st = await stat(abs);
-        fileInfo = `${abs} (${st.size} bytes)`;
-      } catch (e) {
-        fileInfo = `stat-failed:${String(e)}`;
-      }
-    }
+    const fileInfo = opts?.complaint?.mediaPath
+      ? describeStoredMedia(opts.complaint.mediaPath)
+      : null;
 
     console.error("Telegram detailed diagnostic:", {
       when: new Date().toISOString(),
@@ -230,10 +222,9 @@ async function sendTelegramMedia(
   keyboard: ReturnType<typeof createInlineKeyboard>,
 ) {
   try {
-    const absoluteMediaPath = resolveStoredMediaPath(complaint.mediaPath!);
     let fileBuffer: Buffer;
     try {
-      fileBuffer = await readFile(absoluteMediaPath);
+      fileBuffer = await readStoredMedia(complaint.mediaPath!);
     } catch (readErr) {
       await logDetailedTelegramError(method, readErr as unknown, { complaint });
       throw readErr;
@@ -246,7 +237,7 @@ async function sendTelegramMedia(
     formData.set("reply_markup", JSON.stringify(keyboard));
     formData.set(
       fieldName,
-      new File([new Uint8Array(fileBuffer)], basename(absoluteMediaPath), {
+      new File([new Uint8Array(fileBuffer)], basename(complaint.mediaPath!), {
         type: complaint.mediaMimeType ?? undefined,
       }),
     );

@@ -48,6 +48,30 @@ const envSchema = z
       emptyStringToUndefined,
       z.string().min(1).optional(),
     ),
+    SUPABASE_URL: z.preprocess(
+      emptyStringToUndefined,
+      z.string().url().optional(),
+    ),
+    SUPABASE_ANON_KEY: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    SUPABASE_SERVICE_ROLE_KEY: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    SUPABASE_STORAGE_PENDING_BUCKET: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    SUPABASE_STORAGE_PUBLIC_BUCKET: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
     MOCK_MODE: z.preprocess(
       emptyStringToUndefined,
       z.enum(["true", "false"]).default("false"),
@@ -206,6 +230,15 @@ export const env = {
     parsedEnv.POSTGRES_URL_NON_POOLING ??
     parsedEnv.DATABASE_URL ??
     null,
+  supabaseUrl: parsedEnv.SUPABASE_URL ?? null,
+  supabaseAnonKey: parsedEnv.SUPABASE_ANON_KEY ?? null,
+  supabaseServiceRoleKey: parsedEnv.SUPABASE_SERVICE_ROLE_KEY ?? null,
+  nextPublicSupabasePublishableKey:
+    parsedEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? null,
+  supabaseStoragePendingBucket:
+    parsedEnv.SUPABASE_STORAGE_PENDING_BUCKET ?? "relataufsc-pending",
+  supabaseStoragePublicBucket:
+    parsedEnv.SUPABASE_STORAGE_PUBLIC_BUCKET ?? "relataufsc-public",
   mockMode: parsedEnv.MOCK_MODE === "true",
   uploadPendingDir: derivedUploadPendingDir,
   uploadPublicDir: derivedUploadPublicDir,
@@ -234,6 +267,9 @@ export const env = {
 export const flags = {
   mockMode: env.mockMode,
   databaseConfigured: Boolean(env.databaseUrl),
+  supabaseStorageConfigured: Boolean(
+    env.supabaseUrl && env.supabaseServiceRoleKey,
+  ),
   telegramConfigured: Boolean(env.telegramBotToken && env.telegramChatId),
   brevoConfigured: Boolean(
     env.brevoSmtpLogin &&

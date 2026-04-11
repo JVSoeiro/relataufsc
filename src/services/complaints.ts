@@ -133,7 +133,7 @@ export async function createPendingComplaint(input: PendingComplaintInput) {
       createdAt: now,
     };
   } catch (error) {
-    deleteStoredMedia(uploadedMedia?.relativePath);
+    await deleteStoredMedia(uploadedMedia?.relativePath);
     throw error;
   }
 }
