@@ -395,7 +395,7 @@ export function ReportSheet({
                 ) : null}
 
                 <button
-                  className="sticky bottom-0 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[1.15rem] bg-rose-600 px-4 py-3 text-center text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-70 sm:text-base"
+                  className="sticky bottom-0 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[1.15rem] bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 sm:text-base"
                   disabled={submissionState === "submitting"}
                   type="submit"
                 >

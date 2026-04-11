@@ -46,7 +46,7 @@ type ComplaintFeature = GeoJSON.Feature<
 >;
 
 function createMarkerIcon(color: string, selected = false) {
-  const size = selected ? 28 : 22;
+  const size = selected ? 30 : 24;
 
   return L.divIcon({
     className: "ufsc-marker-icon",
@@ -56,6 +56,8 @@ function createMarkerIcon(color: string, selected = false) {
       <span
         style="
           display:flex;
+          align-items:center;
+          justify-content:center;
           width:${size}px;
           height:${size}px;
           border-radius:9999px;
@@ -63,7 +65,17 @@ function createMarkerIcon(color: string, selected = false) {
           border:${selected ? 5 : 4}px solid rgba(255,255,255,0.98);
           box-shadow:0 12px 32px rgba(15,23,42,0.24);
         "
-      ></span>
+      >
+        <span
+          style="
+            color:white;
+            font-size:${selected ? 18 : 15}px;
+            font-weight:800;
+            line-height:1;
+            transform:translateY(-0.5px);
+          "
+        >!</span>
+      </span>
     `,
   });
 }
@@ -219,6 +231,7 @@ export function LeafletCampusMap({
   onComplaintSelect,
   onDraftLocationChange,
 }: LeafletCampusMapProps) {
+  const alertColor = "#7f1d1d";
   const mapRef = useRef<L.Map | null>(null);
   const [bounds, setBounds] = useState<[number, number, number, number] | null>(
     null,
@@ -311,7 +324,7 @@ export function LeafletCampusMap({
                     );
                   },
                 }}
-                icon={createClusterIcon(campus.accent, pointCount)}
+                icon={createClusterIcon(alertColor, pointCount)}
                 key={`cluster-${feature.properties.cluster_id}`}
                 position={[latitude, longitude]}
               />
@@ -330,7 +343,7 @@ export function LeafletCampusMap({
                   }
                 },
               }}
-              icon={createMarkerIcon(campus.accent, isSelected)}
+              icon={createMarkerIcon(alertColor, isSelected)}
               key={complaint.id}
               position={[complaint.latitude, complaint.longitude]}
             />
@@ -339,7 +352,7 @@ export function LeafletCampusMap({
 
         {draftLocation ? (
           <Marker
-            icon={createDraftPinIcon(campus.accent)}
+            icon={createDraftPinIcon(alertColor)}
             position={[draftLocation.latitude, draftLocation.longitude]}
           />
         ) : null}

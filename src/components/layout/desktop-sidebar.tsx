@@ -1,4 +1,4 @@
-import { type CampusId, campusById } from "@/config/campuses";
+import { type CampusId } from "@/config/campuses";
 import { siteConfig } from "@/config/site";
 import { AnimatedCounter } from "@/components/shared/animated-counter";
 import { BrandLockup } from "@/components/layout/brand-lockup";
@@ -17,8 +17,6 @@ export function DesktopSidebar({
   onCampusChange,
   onReportClick,
 }: DesktopSidebarProps) {
-  const activeCampus = campusById[activeCampusId];
-
   return (
     <aside className="hidden h-full min-h-0 w-[clamp(18rem,24vw,22rem)] shrink-0 lg:flex">
       <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden rounded-[clamp(1.55rem,2.8vw,2rem)] border border-white/70 bg-[rgba(255,255,255,0.84)] p-[clamp(1rem,1.5vw,1.4rem)] shadow-[0_30px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl">
@@ -26,12 +24,10 @@ export function DesktopSidebar({
 
         <div
           className="mt-[clamp(0.95rem,1.6vw,1.2rem)] rounded-[clamp(1.35rem,2vw,1.8rem)] border border-white/80 p-[clamp(1rem,1.5vw,1.25rem)] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]"
-          style={{
-            background: `linear-gradient(145deg, ${activeCampus.accent}1c, rgba(255,255,255,0.96))`,
-          }}
+          style={{ background: "rgba(255,255,255,0.96)" }}
         >
           <AnimatedCounter
-            className="overflow-hidden text-ellipsis whitespace-nowrap font-[family:var(--font-display)] text-[clamp(1.8rem,2.7vw,2.35rem)] font-semibold leading-none tracking-tight text-rose-600"
+            className="overflow-hidden text-ellipsis whitespace-nowrap font-[family:var(--font-display)] text-[clamp(1.8rem,2.7vw,2.35rem)] font-semibold leading-none tracking-tight text-[#7f1d1d]"
             formatter={siteConfig.metricLabel}
             value={totalApprovedComplaints}
           />
@@ -59,7 +55,7 @@ export function DesktopSidebar({
         </p>
 
         <button
-          className="mt-auto inline-flex min-h-14 w-full items-center justify-center rounded-[1.2rem] bg-rose-600 px-5 text-center text-base font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+          className="mt-auto inline-flex min-h-14 w-full items-center justify-center rounded-[1.2rem] bg-slate-950 px-5 text-center text-base font-semibold text-white transition hover:-translate-y-0.5 hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
           onClick={onReportClick}
           type="button"
         >

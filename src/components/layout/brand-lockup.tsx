@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 import { brandConfig } from "@/config/brand";
 import { siteConfig } from "@/config/site";
 
@@ -32,13 +30,11 @@ export function BrandLockup({ compact = false }: BrandLockupProps) {
             compact ? "px-3 py-2" : "px-4 py-3"
           }`}
         >
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             alt={brandConfig.partnerLogoAlt}
-            className={compact ? "h-9 w-auto object-contain" : "h-14 w-auto object-contain"}
-            height={compact ? 36 : 56}
-            priority
+            className={compact ? "block h-9 w-auto max-w-[7rem] object-contain" : "block h-14 w-auto max-w-[9rem] object-contain"}
             src={brandConfig.partnerLogoSrc}
-            width={compact ? 92 : 142}
           />
         </div>
       ) : (

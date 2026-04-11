@@ -63,7 +63,7 @@ export function MobileDrawer({
         <div className="grid grid-cols-2 gap-2.5">
           <div className="col-span-2 min-w-0 rounded-[1.25rem] border border-white/80 bg-white/85 px-3 py-2.5">
             <AnimatedCounter
-              className="overflow-hidden text-ellipsis whitespace-nowrap font-[family:var(--font-display)] text-[clamp(1rem,4.8vw,1.28rem)] font-semibold leading-none tracking-tight text-rose-600"
+              className="overflow-hidden text-ellipsis whitespace-nowrap font-[family:var(--font-display)] text-[clamp(1rem,4.8vw,1.28rem)] font-semibold leading-none tracking-tight text-[#7f1d1d]"
               formatter={siteConfig.metricLabel}
               value={totalApprovedComplaints}
             />
@@ -82,7 +82,7 @@ export function MobileDrawer({
           </button>
 
           <button
-            className="inline-flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-[1.15rem] bg-rose-600 px-3 text-center text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+            className="inline-flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-[1.15rem] bg-slate-950 px-3 text-center text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
             onClick={onReportClick}
             type="button"
           >
