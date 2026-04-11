@@ -1,3 +1,5 @@
+import nodemailer from "nodemailer";
+
 import { env, flags } from "@/lib/env";
 
 const approvalEmailHtml = `
@@ -10,33 +12,30 @@ const approvalEmailHtml = `
 export async function sendApprovalEmail(recipientEmail: string) {
   if (!flags.brevoConfigured) {
     console.warn(
-      "Brevo is not configured. Approval email was skipped for:",
+      "Brevo SMTP is not configured. Approval email was skipped for:",
       recipientEmail,
     );
     return;
   }
 
-  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-    method: "POST",
-    headers: {
-      "api-key": env.brevoApiKey!,
-      "content-type": "application/json",
-      accept: "application/json",
+  const transporter = nodemailer.createTransport({
+    host: env.brevoSmtpHost,
+    port: env.brevoSmtpPort,
+    secure: env.brevoSmtpSecure,
+    auth: {
+      user: env.brevoSmtpLogin!,
+      pass: env.brevoSmtpPassword!,
     },
-    body: JSON.stringify({
-      sender: {
-        email: env.brevoSenderEmail,
-        name: env.brevoSenderName,
-      },
-      to: [{ email: recipientEmail }],
-      subject: "Your report was approved",
-      textContent:
-        "Your report has been reviewed and approved. It is now visible on UFSC Relata!",
-      htmlContent: approvalEmailHtml,
-    }),
   });
 
-  if (!response.ok) {
-    throw new Error("Brevo approval email request failed.");
-  }
+  await transporter.sendMail({
+    from: {
+      address: env.brevoSenderEmail!,
+      name: env.brevoSenderName!,
+    },
+    to: recipientEmail,
+    subject: "Your report was approved",
+    text: "Your report has been reviewed and approved. It is now visible on UFSC Relata!",
+    html: approvalEmailHtml,
+  });
 }

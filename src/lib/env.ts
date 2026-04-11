@@ -52,9 +52,25 @@ const envSchema = z
       emptyStringToUndefined,
       z.coerce.number().int().positive().default(720),
     ),
-    BREVO_API_KEY: z.preprocess(
+    BREVO_SMTP_HOST: z.preprocess(
       emptyStringToUndefined,
       z.string().min(1).optional(),
+    ),
+    BREVO_SMTP_PORT: z.preprocess(
+      emptyStringToUndefined,
+      z.coerce.number().int().positive().optional(),
+    ),
+    BREVO_SMTP_LOGIN: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    BREVO_SMTP_PASSWORD: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    BREVO_SMTP_SECURE: z.preprocess(
+      emptyStringToUndefined,
+      z.enum(["true", "false"]).optional(),
     ),
     BREVO_SENDER_EMAIL: z.preprocess(
       emptyStringToUndefined,
@@ -82,15 +98,32 @@ const envSchema = z
     ),
   })
   .superRefine((value, ctx) => {
+    const smtpCredentialProvided = Boolean(
+      value.BREVO_SMTP_PASSWORD || value.BREVO_SMTP_LOGIN,
+    );
+
     if (
-      value.BREVO_API_KEY &&
+      smtpCredentialProvided &&
       (!value.BREVO_SENDER_EMAIL || !value.BREVO_SENDER_NAME)
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message:
-          "BREVO_SENDER_EMAIL and BREVO_SENDER_NAME are required when BREVO_API_KEY is set.",
+          "BREVO_SENDER_EMAIL and BREVO_SENDER_NAME are required when SMTP is configured.",
         path: ["BREVO_SENDER_EMAIL"],
+      });
+    }
+
+    if (
+      smtpCredentialProvided &&
+      !value.BREVO_SMTP_LOGIN &&
+      !value.BREVO_SENDER_EMAIL
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "BREVO_SMTP_LOGIN or BREVO_SENDER_EMAIL is required when SMTP is configured.",
+        path: ["BREVO_SMTP_LOGIN"],
       });
     }
   });
@@ -121,7 +154,12 @@ export const env = {
   telegramChatId: parsedEnv.TELEGRAM_CHAT_ID ?? null,
   moderationSecret: parsedEnv.MODERATION_SECRET,
   moderationTokenTtlMinutes: parsedEnv.MODERATION_TOKEN_TTL_MINUTES,
-  brevoApiKey: parsedEnv.BREVO_API_KEY ?? null,
+  brevoSmtpHost: parsedEnv.BREVO_SMTP_HOST ?? "smtp-relay.brevo.com",
+  brevoSmtpPort: parsedEnv.BREVO_SMTP_PORT ?? 587,
+  brevoSmtpLogin:
+    parsedEnv.BREVO_SMTP_LOGIN ?? parsedEnv.BREVO_SENDER_EMAIL ?? null,
+  brevoSmtpPassword: parsedEnv.BREVO_SMTP_PASSWORD ?? null,
+  brevoSmtpSecure: parsedEnv.BREVO_SMTP_SECURE === "true",
   brevoSenderEmail: parsedEnv.BREVO_SENDER_EMAIL ?? null,
   brevoSenderName: parsedEnv.BREVO_SENDER_NAME ?? null,
   seedDemoData: parsedEnv.SEED_DEMO_DATA,
@@ -136,7 +174,10 @@ export const flags = {
   databaseConfigured: Boolean(env.databaseUrl),
   telegramConfigured: Boolean(env.telegramBotToken && env.telegramChatId),
   brevoConfigured: Boolean(
-    env.brevoApiKey && env.brevoSenderEmail && env.brevoSenderName,
+    env.brevoSmtpLogin &&
+      env.brevoSmtpPassword &&
+      env.brevoSenderEmail &&
+      env.brevoSenderName,
   ),
 } as const;
 

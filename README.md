@@ -1,6 +1,6 @@
 # UFSC Relata!
 
-O UFSC Relata! é um MVP em produção para relatar problemas visíveis de infraestrutura nos campi da UFSC por meio de um mapa público. A aplicação roda como um único container Next.js, com MySQL/MariaDB, uploads persistidos em disco, moderação por Telegram e e-mail transacional opcional via Brevo.
+O UFSC Relata! é um MVP em produção para relatar problemas visíveis de infraestrutura nos campi da UFSC por meio de um mapa público. A aplicação roda como um único container Next.js, com MySQL/MariaDB, uploads persistidos em disco, moderação por Telegram e e-mail transacional opcional via Brevo SMTP.
 
 ## Escopo
 
@@ -68,7 +68,7 @@ Fluxo:
 6. A mudança real de estado acontece somente em:
    - `POST /api/moderate/approve`
    - `POST /api/moderate/reject`
-7. A aprovação torna o relato público e tenta enviar o e-mail de aprovação via Brevo, se existir e-mail
+7. A aprovação torna o relato público e tenta enviar o e-mail de aprovação via Brevo SMTP, se existir e-mail
 8. A rejeição mantém o relato fora da pipeline pública
 9. Em ambos os casos, `submitter_email` é removido imediatamente durante a moderação
 
@@ -123,7 +123,7 @@ Nunca retornado publicamente:
 
 ## Comportamento do e-mail
 
-O Brevo é usado apenas para e-mail transacional de aprovação.
+A Brevo é usada apenas para e-mail transacional de aprovação via SMTP.
 
 Regra pró-privacidade:
 
@@ -177,7 +177,11 @@ Principais variáveis:
 - `TELEGRAM_CHAT_ID`
 - `MODERATION_SECRET`
 - `MODERATION_TOKEN_TTL_MINUTES`
-- `BREVO_API_KEY`
+- `BREVO_SMTP_HOST`
+- `BREVO_SMTP_PORT`
+- `BREVO_SMTP_LOGIN`
+- `BREVO_SMTP_PASSWORD`
+- `BREVO_SMTP_SECURE`
 - `BREVO_SENDER_EMAIL`
 - `BREVO_SENDER_NAME`
 - `SUBMISSION_RATE_LIMIT_WINDOW_SECONDS`
