@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { CalendarDays, MapPin, UserRound, X } from "lucide-react";
-import Image from "next/image";
 
 import { campusById } from "@/config/campuses";
 import { formatPublicDate } from "@/lib/format";
@@ -30,22 +29,23 @@ export function ComplaintDetailCard({
           <div className="pointer-events-auto overflow-hidden rounded-[1.75rem] border border-white/80 bg-[rgba(255,255,255,0.94)] shadow-[0_25px_70px_rgba(15,23,42,0.16)] backdrop-blur-xl">
             {complaint.mediaUrl ? (
               complaint.mediaMimeType?.startsWith("video/") ? (
-                <video
-                  className="h-48 w-full bg-slate-950 object-cover"
-                  controls
-                  playsInline
-                  preload="metadata"
-                  src={complaint.mediaUrl}
-                />
-              ) : (
-                <div className="relative h-48 w-full overflow-hidden bg-slate-100">
-                  <Image
-                    alt=""
-                    className="object-cover"
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 384px"
+                <div className="flex max-h-[min(52svh,34rem)] min-h-[12rem] w-full items-center justify-center bg-slate-950 px-2 py-2 sm:px-3 sm:py-3">
+                  <video
+                    className="max-h-[min(48svh,30rem)] w-full rounded-[1.2rem] bg-slate-950 object-contain"
+                    controls
+                    controlsList="nodownload noplaybackrate"
+                    playsInline
+                    preload="metadata"
                     src={complaint.mediaUrl}
-                    unoptimized
+                  />
+                </div>
+              ) : (
+                <div className="flex max-h-[min(52svh,34rem)] min-h-[12rem] w-full items-center justify-center bg-slate-100 px-2 py-2 sm:px-3 sm:py-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    alt="Mídia do relato"
+                    className="max-h-[min(48svh,30rem)] w-auto max-w-full rounded-[1.2rem] object-contain"
+                    src={complaint.mediaUrl}
                   />
                 </div>
               )
