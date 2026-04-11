@@ -290,36 +290,32 @@ export function LandingPageShell({
             {isInstagramPopupVisible && !isReportOpen ? (
               <motion.div
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                className="absolute bottom-[5.8rem] left-3 z-[709] w-[min(20rem,calc(100%-1.5rem))] lg:bottom-4 lg:left-4 lg:w-[min(24rem,calc(100%-2rem))]"
+                className="absolute right-3 top-[5.55rem] z-[709] w-[min(10.75rem,calc(100%-8.5rem))] lg:bottom-4 lg:left-4 lg:right-auto lg:top-auto lg:w-[min(24rem,calc(100%-2rem))]"
                 exit={{ opacity: 0, y: 16, scale: 0.98 }}
                 initial={{ opacity: 0, y: 16, scale: 0.98 }}
                 transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div className="rounded-[1.45rem] border border-white/80 bg-[rgba(255,255,255,0.95)] p-3 shadow-[0_22px_60px_rgba(15,23,42,0.18)] backdrop-blur-xl">
-                  <div className="flex items-start gap-3">
+                <div className="rounded-[1.3rem] border border-white/80 bg-[rgba(255,255,255,0.95)] p-3 shadow-[0_22px_60px_rgba(15,23,42,0.18)] backdrop-blur-xl">
+                  <div className="flex items-start gap-2">
                     <div className="min-w-0 flex-1">
-                      <p className="text-[0.9rem] font-semibold leading-5 text-slate-900">
-                        Gostou da aplicação e quer conhecer mais propostas para a
-                        UFSC?
-                      </p>
-                      <p className="mt-1 text-sm leading-5 text-slate-600">
-                        Conheça-nos melhor!
+                      <p className="text-[0.82rem] font-semibold leading-4 text-slate-900 lg:text-[0.9rem] lg:leading-5">
+                        Gostou? Conheça mais!
                       </p>
                     </div>
 
                     <button
                       aria-label="Fechar convite"
-                      className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+                      className="inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 lg:size-8"
                       onClick={() => setIsInstagramPopupVisible(false)}
                       type="button"
                     >
-                      <X className="size-4" />
+                      <X className="size-3.5 lg:size-4" />
                     </button>
                   </div>
 
-                  <div className="mt-3 flex justify-start">
+                  <div className="mt-2 flex justify-start lg:mt-3">
                     <a
-                      className="inline-flex min-h-10 items-center justify-center rounded-full px-4 text-sm font-semibold text-slate-950 transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1cd927]"
+                      className="inline-flex min-h-9 items-center justify-center rounded-full px-3.5 text-[0.82rem] font-semibold text-slate-950 transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1cd927] lg:min-h-10 lg:px-4 lg:text-sm"
                       href="https://www.instagram.com/mudarparatransformaraufsc/"
                       rel="noreferrer"
                       style={{ backgroundColor: "#1cd927" }}

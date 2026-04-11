@@ -323,8 +323,8 @@ export function ReportSheet({
                       {selectedFile
                         ? selectedFile.name
                         : isClientMockMode
-                          ? "Adicione uma imagem ou um vídeo curto"
-                          : "Adicione uma imagem ou um vídeo curto obrigatoriamente"}
+                          ? "Adicione uma imagem ou um vídeo."
+                          : "Adicione uma imagem ou um vídeo."}
                     </span>
                     <input
                       accept={acceptedUploadMimeTypes.join(",")}

@@ -7,11 +7,13 @@ type BrandLockupProps = {
 export function BrandLockup({ compact = false }: BrandLockupProps) {
   return (
     <div className="grid grid-cols-2 items-center gap-[clamp(0.95rem,2.2vw,1.7rem)]">
-      <div className="min-w-0">
+      <div
+        className={compact ? "min-w-0 text-right" : "min-w-0"}
+      >
         <h1
           className={
             compact
-              ? "text-[clamp(0.92rem,2.9vw,1.08rem)] leading-[0.95]"
+              ? "text-[clamp(0.92rem,2.9vw,1.08rem)] leading-[0.95] text-right"
               : "text-[clamp(1.16rem,1.85vw,1.45rem)] leading-[0.94]"
           }
           style={{
@@ -22,7 +24,7 @@ export function BrandLockup({ compact = false }: BrandLockupProps) {
         >
           RelataUFSC
         </h1>
-        <div className="mt-1 flex justify-end">
+        <div className={compact ? "mt-1 flex justify-end" : "mt-1 flex justify-end"}>
           <p
             className={
               compact
