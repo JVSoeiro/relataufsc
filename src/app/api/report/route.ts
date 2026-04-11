@@ -138,14 +138,9 @@ export async function POST(request: Request) {
       );
     }
 
-    void sendComplaintToTelegram(
+    await sendComplaintToTelegram(
       pendingComplaint as Parameters<typeof sendComplaintToTelegram>[0],
-    ).catch((error) => {
-      console.error(
-        "Falha ao enviar a notificação de moderação para o Telegram:",
-        error,
-      );
-    });
+    );
 
     return NextResponse.json(
       {
