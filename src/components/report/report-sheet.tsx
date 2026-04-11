@@ -42,6 +42,7 @@ export function ReportSheet({
   onLocationClear,
   onSubmitted,
 }: ReportSheetProps) {
+  const isClientMockMode = process.env.NEXT_PUBLIC_MOCK_MODE === "true";
   const formRef = useRef<HTMLFormElement | null>(null);
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
   const [submissionState, setSubmissionState] = useState<SubmissionState>("idle");
@@ -96,6 +97,12 @@ export function ReportSheet({
     if (!draftLocation) {
       setSubmissionState("error");
       setErrorMessage("Marque o local exato do problema no mapa antes de enviar.");
+      return;
+    }
+
+    if (!isClientMockMode && !selectedFile) {
+      setSubmissionState("error");
+      setErrorMessage("Envie uma imagem ou um vídeo para registrar o relato.");
       return;
     }
 
@@ -315,7 +322,9 @@ export function ReportSheet({
                     <span className="min-w-0 flex-1 truncate">
                       {selectedFile
                         ? selectedFile.name
-                        : "Adicione uma imagem ou um vídeo curto"}
+                        : isClientMockMode
+                          ? "Adicione uma imagem ou um vídeo curto"
+                          : "Adicione uma imagem ou um vídeo curto obrigatoriamente"}
                     </span>
                     <input
                       accept={acceptedUploadMimeTypes.join(",")}
@@ -324,6 +333,7 @@ export function ReportSheet({
                       onChange={(event) =>
                         setSelectedFile(event.currentTarget.files?.[0] ?? null)
                       }
+                      required={!isClientMockMode}
                       type="file"
                     />
                   </span>
@@ -404,12 +414,14 @@ export function ReportSheet({
                       <LoaderCircle className="size-4 animate-spin" />
                       Enviando relato
                     </>
-                  ) : draftLocation ? (
+                  ) : draftLocation && (selectedFile || isClientMockMode) ? (
                     "Enviar relato"
                   ) : (
                     <>
                       <CircleOff className="size-4" />
-                      Marque primeiro o local no mapa
+                      {!draftLocation
+                        ? "Marque primeiro o local no mapa"
+                        : "Adicione uma imagem ou video"}
                     </>
                   )}
                 </button>

@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   return createModerationHtmlResponse({
     title: "Relato aprovado",
     message:
-      "O relato agora está visível no UFSC Relata! Se a pessoa enviou um e-mail, a notificação de aprovação foi tentada e o endereço armazenado foi removido em seguida.",
+      "O relato agora está visível no RelataUFSC. Se a pessoa enviou um e-mail, a notificação de status foi tentada e o endereço armazenado foi removido em seguida.",
     accent: "#0f766e",
   });
 }

@@ -125,3 +125,12 @@ export async function seedDemoComplaints() {
     );
   }
 }
+
+export async function clearDemoComplaints() {
+  await pool.execute<ResultSetHeader>(
+    `
+      DELETE FROM complaints
+      WHERE id LIKE 'demo-%' OR id LIKE 'mock\\_%'
+    `,
+  );
+}

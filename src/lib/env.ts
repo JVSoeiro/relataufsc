@@ -14,7 +14,7 @@ const envSchema = z
       .enum(["development", "test", "production"])
       .default("development"),
     APP_URL: z.string().url().default("http://localhost:5000"),
-    APP_NAME: z.string().default("UFSC Relata!"),
+    APP_NAME: z.string().default("RelataUFSC"),
     DATA_DIR: z.string().min(1).default("./data"),
     UPLOAD_PENDING_DIR: z.preprocess(
       emptyStringToUndefined,
@@ -27,6 +27,10 @@ const envSchema = z
     DATABASE_URL: z.preprocess(
       emptyStringToUndefined,
       z.string().min(1).optional(),
+    ),
+    MOCK_MODE: z.preprocess(
+      emptyStringToUndefined,
+      z.enum(["true", "false"]).default("false"),
     ),
     UPLOAD_DIR: z.preprocess(
       emptyStringToUndefined,
@@ -82,7 +86,7 @@ const envSchema = z
     ),
     SEED_DEMO_DATA: z
       .enum(["true", "false"])
-      .default("true")
+      .default("false")
       .transform((value) => value === "true"),
     SUBMISSION_RATE_LIMIT_WINDOW_SECONDS: z.preprocess(
       emptyStringToUndefined,
@@ -146,6 +150,7 @@ export const env = {
   appName: parsedEnv.APP_NAME,
   dataDir: parsedEnv.DATA_DIR,
   databaseUrl: parsedEnv.DATABASE_URL ?? null,
+  mockMode: parsedEnv.MOCK_MODE === "true",
   uploadPendingDir: derivedUploadPendingDir,
   uploadPublicDir: derivedUploadPublicDir,
   maxUploadSizeMb: parsedEnv.MAX_UPLOAD_SIZE_MB,
@@ -171,6 +176,7 @@ export const env = {
 } as const;
 
 export const flags = {
+  mockMode: env.mockMode,
   databaseConfigured: Boolean(env.databaseUrl),
   telegramConfigured: Boolean(env.telegramBotToken && env.telegramChatId),
   brevoConfigured: Boolean(
@@ -182,6 +188,10 @@ export const flags = {
 } as const;
 
 export function assertOperationalEnvironment() {
+  if (env.nodeEnv === "production" && env.mockMode) {
+    throw new Error("MOCK_MODE must be disabled in production.");
+  }
+
   if (env.nodeEnv === "production" && !flags.databaseConfigured) {
     throw new Error("DATABASE_URL is required in production.");
   }

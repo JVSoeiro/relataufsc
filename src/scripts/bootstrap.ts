@@ -10,7 +10,7 @@ async function main() {
   try {
     await bootstrapApp();
     assertOperationalEnvironment();
-    console.log("UFSC Relata bootstrap completed.");
+    console.log("RelataUFSC bootstrap completed.");
   } finally {
     await closeDatabasePool();
   }

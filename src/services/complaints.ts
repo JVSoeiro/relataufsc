@@ -7,7 +7,13 @@ import {
   listApprovedComplaintsByCampus,
 } from "@/db/repositories/complaints-repository";
 import type { MediaKind } from "@/lib/constants";
+import { flags } from "@/lib/env";
 import type { PublicComplaint } from "@/lib/types";
+import {
+  createMockComplaint,
+  getMockApprovedComplaintCount,
+  listMockPublicComplaintsByCampus,
+} from "@/services/mock-complaints";
 import {
   createPublicMediaUrl,
   deleteStoredMedia,
@@ -59,16 +65,28 @@ function serializePublicComplaint(row: {
 }
 
 export async function listPublicComplaintsByCampus(campusId: CampusId) {
+  if (flags.mockMode) {
+    return listMockPublicComplaintsByCampus(campusId);
+  }
+
   const rows = await listApprovedComplaintsByCampus(campusId);
 
   return rows.map(serializePublicComplaint);
 }
 
 export async function getApprovedComplaintCount() {
+  if (flags.mockMode) {
+    return getMockApprovedComplaintCount();
+  }
+
   return getApprovedComplaintCountFromRepository();
 }
 
 export async function createPendingComplaint(input: PendingComplaintInput) {
+  if (flags.mockMode) {
+    return createMockComplaint(input);
+  }
+
   const complaintId = `cmp_${randomUUID()}`;
   const now = new Date().toISOString();
   let uploadedMedia:

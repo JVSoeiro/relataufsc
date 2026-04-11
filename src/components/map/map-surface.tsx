@@ -24,6 +24,7 @@ const LeafletCampusMap = dynamic(
 
 type MapSurfaceProps = {
   campus: CampusConfig;
+  campusFocusNonce: number;
   complaints: PublicComplaint[];
   isLoading: boolean;
   reportMode: boolean;

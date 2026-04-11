@@ -1,7 +1,7 @@
 import { formatCount } from "@/lib/format";
 
 export const siteConfig = {
-  name: "UFSC Relata!",
+  name: "RelataUFSC",
   description:
     "Mapa público para relatar problemas visíveis de infraestrutura nos campi da UFSC.",
   defaultCampusId: "florianopolis",

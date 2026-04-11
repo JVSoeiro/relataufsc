@@ -1,6 +1,6 @@
-# UFSC Relata!
+# RelataUFSC
 
-O UFSC Relata! é um MVP em produção para relatar problemas visíveis de infraestrutura nos campi da UFSC por meio de um mapa público. A aplicação roda como um único container Next.js, com MySQL/MariaDB, uploads persistidos em disco, moderação por Telegram e e-mail transacional opcional via Brevo SMTP.
+O RelataUFSC é um MVP em produção para relatar problemas visíveis de infraestrutura nos campi da UFSC por meio de um mapa público. A aplicação roda como um único container Next.js, com MySQL/MariaDB, uploads persistidos em disco, moderação por Telegram e e-mail transacional opcional via Brevo SMTP.
 
 ## Escopo
 
@@ -68,7 +68,7 @@ Fluxo:
 6. A mudança real de estado acontece somente em:
    - `POST /api/moderate/approve`
    - `POST /api/moderate/reject`
-7. A aprovação torna o relato público e tenta enviar o e-mail de aprovação via Brevo SMTP, se existir e-mail
+7. A aprovação ou rejeição tenta enviar um e-mail transacional de status via Brevo SMTP, se existir e-mail
 8. A rejeição mantém o relato fora da pipeline pública
 9. Em ambos os casos, `submitter_email` é removido imediatamente durante a moderação
 
@@ -123,7 +123,7 @@ Nunca retornado publicamente:
 
 ## Comportamento do e-mail
 
-A Brevo é usada apenas para e-mail transacional de aprovação via SMTP.
+A Brevo é usada apenas para e-mail transacional de status via SMTP.
 
 Regra pró-privacidade:
 
@@ -169,6 +169,7 @@ Principais variáveis:
 - `APP_URL`
 - `APP_NAME`
 - `DATABASE_URL`
+- `MOCK_MODE`
 - `DATA_DIR`
 - `UPLOAD_PENDING_DIR`
 - `UPLOAD_PUBLIC_DIR`
@@ -191,6 +192,40 @@ Notas:
 
 - `DATABASE_URL` é obrigatória em runtime e deve apontar para o banco MySQL/MariaDB do Dokploy.
 - Se o nome do banco tiver espaços, use URL encoding, por exemplo `%20`.
+- Para rodar localmente sem banco real, use `MOCK_MODE=true` e deixe `DATABASE_URL` vazia.
+
+## Modo mock local
+
+Para abrir a aplicação localmente sem MySQL, Telegram ou Brevo:
+
+1. Ajuste o `.env` local:
+
+```bash
+NODE_ENV=development
+APP_URL=http://localhost:5000
+MOCK_MODE=true
+NEXT_PUBLIC_MOCK_MODE=true
+DATABASE_URL=
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+BREVO_SMTP_LOGIN=
+BREVO_SMTP_PASSWORD=
+PORT=5000
+```
+
+2. Rode a aplicação:
+
+```bash
+npm install
+npx next dev -p 5000
+```
+
+Nesse modo:
+
+- os relatos públicos vêm de memória com dados demonstrativos
+- novos envios funcionam localmente sem moderação real
+- uploads enviados pelo formulário continuam funcionando localmente
+- Telegram, banco e rate limit persistente são ignorados
 
 ## Desenvolvimento local
 
@@ -200,7 +235,7 @@ Instale as dependências:
 npm install
 ```
 
-Inicialize diretórios locais, migrações e seed demo:
+Inicialize diretórios locais e migrações:
 
 ```bash
 npm run db:bootstrap
@@ -265,21 +300,23 @@ Comportamento operacional:
 
 - No primeiro boot, a app cria `/app/data/uploads/pending` e `/app/data/uploads/public` caso não existam
 - As migrações rodam automaticamente no bootstrap de inicialização
-- O seed demo pode ser desativado com `SEED_DEMO_DATA=false`
+- A execução oficial nunca publica dados mockados do banco
+- Registros antigos de demonstração com IDs reservados (`demo-*` e `mock_*`) são limpos no bootstrap
 
 ## Como a moderação funciona
 
 - O visitante envia um relato pelo mapa
 - O backend salva o relato como pendente
-- O Telegram recebe uma mensagem com descrição, campus, localização, nome público opcional, e-mail opcional e preview protegido de mídia, quando existir
+- O Telegram recebe uma mensagem em português com protocolo, nome informado, e-mail opcional, descrição, horário de envio, arquivo e preview protegido da mídia, quando existir
 - Os botões de aprovação e rejeição usam links assinados e expiráveis
 - Ao aprovar:
   - o relato fica público
-  - o e-mail de aprovação é tentado se existir
+  - um e-mail de status é tentado se existir
   - o e-mail é removido da persistência em seguida
 - Ao rejeitar:
   - o relato segue fora da área pública
-  - o e-mail é removido imediatamente
+  - um e-mail de status é tentado se existir
+  - o e-mail é removido imediatamente após a moderação
 
 ## Checklist de segurança
 
@@ -291,7 +328,7 @@ Comportamento operacional:
 - Segredos do Telegram permanecem apenas no servidor
 - Mídia pendente é protegida por rota assinada de preview
 - Mídia aprovada só fica pública após a moderação movê-la para `public/`
-- O e-mail de aprovação só é tentado em aprovações
+- O e-mail de status é tentado na aprovação ou rejeição, se existir
 - `submitter_email` é removido da persistência após a moderação
 
 ## Testes

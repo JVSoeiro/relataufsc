@@ -3,7 +3,12 @@ import { readFile } from "node:fs/promises";
 
 import { campusById, type CampusId } from "@/config/campuses";
 import { env, flags } from "@/lib/env";
-import { formatApproximateCoordinates, truncateText } from "@/lib/format";
+import {
+  formatApproximateCoordinates,
+  formatBytes,
+  formatDateTime,
+  truncateText,
+} from "@/lib/format";
 import { resolveStoredMediaPath } from "@/services/storage";
 import { createModerationToken } from "@/services/tokens";
 
@@ -18,6 +23,8 @@ type PendingComplaintForTelegram = {
   mediaPath: string | null;
   mediaKind: "image" | "video" | null;
   mediaMimeType: string | null;
+  mediaSizeBytes?: number | null;
+  createdAt?: string | null;
 };
 
 function createModerationPageUrl(action: "approve" | "reject", token: string) {
@@ -35,21 +42,32 @@ function buildModerationText(
   previewUrl: string | null,
 ) {
   const campus = campusById[complaint.campusId];
+  const fileName = complaint.mediaPath ? basename(complaint.mediaPath) : null;
+  const descriptionLimit = complaint.mediaPath ? 260 : 520;
 
   return [
-    "Novo relato pendente",
-    `Referência: ${complaint.id}`,
+    "Novo relato aguardando moderação",
+    `Protocolo: ${complaint.id}`,
     `Campus: ${campus.nome}`,
+    `Nome informado: ${complaint.publicName ?? "Anônimo"}`,
+    `E-mail para retorno: ${complaint.submitterEmail ?? "Não informado"}`,
+    complaint.createdAt
+      ? `Enviado em: ${formatDateTime(complaint.createdAt)}`
+      : null,
     `Local: ${formatApproximateCoordinates(
       complaint.latitude,
       complaint.longitude,
     )}`,
-    `Nome público: ${complaint.publicName ?? "Anônimo"}`,
-    complaint.submitterEmail
-      ? `E-mail para aviso de aprovação: ${complaint.submitterEmail}`
-      : "E-mail para aviso de aprovação: não informado",
-    `Descrição: ${truncateText(complaint.description, 360)}`,
-    complaint.mediaKind ? `Mídia: ${complaint.mediaKind}` : "Mídia: nenhuma",
+    complaint.mediaKind
+      ? `Arquivo: ${fileName ?? "mídia enviada"}${
+          complaint.mediaMimeType ? ` • ${complaint.mediaMimeType}` : ""
+        }${
+          typeof complaint.mediaSizeBytes === "number"
+            ? ` • ${formatBytes(complaint.mediaSizeBytes)}`
+            : ""
+        }`
+      : "Arquivo: não enviado",
+    `Descrição: ${truncateText(complaint.description, descriptionLimit)}`,
     previewUrl ? `Pré-visualização: ${previewUrl}` : null,
   ]
     .filter(Boolean)
@@ -65,11 +83,11 @@ function createInlineKeyboard(
     inline_keyboard: [
       [
         {
-          text: "Aprovar",
+          text: "Aprovar relato",
           url: createModerationPageUrl("approve", approveToken),
         },
         {
-          text: "Rejeitar",
+          text: "Recusar relato",
           url: createModerationPageUrl("reject", rejectToken),
         },
       ],
@@ -145,9 +163,17 @@ async function sendTelegramMedia(
 export async function sendComplaintToTelegram(
   complaint: PendingComplaintForTelegram,
 ) {
+  if (flags.mockMode) {
+    console.info(
+      "Mock mode ativo. Notificação de Telegram ignorada para:",
+      complaint.id,
+    );
+    return;
+  }
+
   if (!flags.telegramConfigured) {
     console.warn(
-      "Telegram não está configurado. Relato pendente salvo sem notificação:",
+      "Telegram não está configurado. Relato pendente salvo sem aviso:",
       complaint.id,
     );
     return;

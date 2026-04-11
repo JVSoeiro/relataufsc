@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   return createModerationHtmlResponse({
     title: "Relato rejeitado",
     message:
-      "O relato foi rejeitado e removido da área pública de publicação. Qualquer e-mail armazenado foi removido imediatamente.",
+      "O relato foi rejeitado e seguiu fora da área pública. Se havia e-mail informado, a notificação de status foi tentada e o endereço armazenado foi removido imediatamente.",
     accent: "#b91c1c",
   });
 }

@@ -4,7 +4,7 @@ import { env } from "@/lib/env";
 
 function assertDatabaseUrl() {
   if (!env.databaseUrl) {
-    throw new Error("DATABASE_URL is required to connect UFSC Relata to MySQL.");
+    throw new Error("DATABASE_URL is required to connect RelataUFSC to MySQL.");
   }
 
   return env.databaseUrl;

@@ -4,7 +4,7 @@ import "leaflet/dist/leaflet.css";
 
 import L from "leaflet";
 import Supercluster from "supercluster";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   MapContainer,
   Marker,
@@ -19,6 +19,7 @@ import type { DraftLocation, PublicComplaint } from "@/lib/types";
 
 type LeafletCampusMapProps = {
   campus: CampusConfig;
+  campusFocusNonce: number;
   complaints: PublicComplaint[];
   isLoading: boolean;
   reportMode: boolean;
@@ -44,6 +45,22 @@ type ComplaintFeature = GeoJSON.Feature<
     complaint: PublicComplaint;
   }
 >;
+
+function getBoundsFromCenterRadius(
+  center: [number, number],
+  radiusMeters: number,
+): [[number, number], [number, number]] {
+  const [latitude, longitude] = center;
+  const latitudeDelta = radiusMeters / 111_320;
+  const longitudeDelta =
+    radiusMeters /
+    (111_320 * Math.max(Math.cos((latitude * Math.PI) / 180), 0.01));
+
+  return [
+    [latitude - latitudeDelta, longitude - longitudeDelta],
+    [latitude + latitudeDelta, longitude + longitudeDelta],
+  ];
+}
 
 function createMarkerIcon(color: string, selected = false) {
   const size = selected ? 30 : 24;
@@ -140,21 +157,39 @@ function createDraftPinIcon(color: string) {
   });
 }
 
-function CampusViewport({ campus }: { campus: CampusConfig }) {
+function CampusViewport({
+  campus,
+  focusNonce,
+}: {
+  campus: CampusConfig;
+  focusNonce: number;
+}) {
   const map = useMap();
 
   useEffect(() => {
+    map.stop();
     map.invalidateSize();
 
     const size = map.getSize();
     const padding = size.x < 640 ? 18 : 34;
+    const highlightBounds = campus.fitRadiusMeters
+      ? getBoundsFromCenterRadius(campus.centro, campus.fitRadiusMeters)
+      : null;
 
-    map.fitBounds(campus.viewBounds, {
+    map.flyToBounds(highlightBounds ?? campus.viewBounds, {
       animate: true,
       maxZoom: 17,
       padding: [padding, padding],
+      duration: 0.65,
     });
-  }, [campus, map]);
+  }, [
+    campus.centro,
+    campus.fitRadiusMeters,
+    campus.id,
+    campus.viewBounds,
+    focusNonce,
+    map,
+  ]);
 
   return null;
 }
@@ -223,6 +258,7 @@ function MapEvents({
 
 export function LeafletCampusMap({
   campus,
+  campusFocusNonce,
   complaints,
   isLoading,
   reportMode,
@@ -237,6 +273,13 @@ export function LeafletCampusMap({
     null,
   );
   const [zoom, setZoom] = useState(15);
+  const handleBoundsChange = useCallback(
+    (nextBounds: [number, number, number, number], nextZoom: number) => {
+      setBounds(nextBounds);
+      setZoom(nextZoom);
+    },
+    [],
+  );
   const clusterIndex = useMemo(() => {
     const index = new Supercluster<
       ComplaintFeature["properties"],
@@ -280,24 +323,32 @@ export function LeafletCampusMap({
   return (
     <div className="relative h-full w-full">
       <MapContainer
+        key={`${campus.id}-${campusFocusNonce}`}
         center={campus.centro}
         className="h-full w-full"
         ref={mapRef}
+        scrollWheelZoom
+        wheelDebounceTime={28}
+        wheelPxPerZoomLevel={140}
         zoom={15}
+        zoomDelta={0.25}
         zoomControl={false}
+        zoomSnap={0.25}
       >
         <TileLayer
           attribution='&copy; OpenStreetMap contributors &copy; CARTO'
-          url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png"
+        />
+        <TileLayer
+          attribution='&copy; OpenStreetMap contributors &copy; CARTO'
+          pane="overlayPane"
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
         />
 
         <ZoomControl position="bottomright" />
-        <CampusViewport campus={campus} />
+        <CampusViewport campus={campus} focusNonce={campusFocusNonce} />
         <MapEvents
-          onBoundsChange={(nextBounds, nextZoom) => {
-            setBounds(nextBounds);
-            setZoom(nextZoom);
-          }}
+          onBoundsChange={handleBoundsChange}
           onDraftLocationChange={onDraftLocationChange}
           reportMode={reportMode}
         />

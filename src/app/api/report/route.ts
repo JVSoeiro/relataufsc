@@ -14,7 +14,11 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   await bootstrapApp();
 
-  if (env.nodeEnv === "production" && !flags.telegramConfigured) {
+  if (
+    env.nodeEnv === "production" &&
+    !flags.mockMode &&
+    !flags.telegramConfigured
+  ) {
     return NextResponse.json(
       {
         error: "A moderação está temporariamente indisponível.",
@@ -45,6 +49,15 @@ export async function POST(request: Request) {
     const mediaValue = formData.get("media");
     const media =
       mediaValue instanceof File && mediaValue.size > 0 ? mediaValue : null;
+
+    if (!flags.mockMode && !media) {
+      return NextResponse.json(
+        {
+          error: "Envie uma imagem ou um vídeo para registrar o relato.",
+        },
+        { status: 400, headers: { "cache-control": "no-store" } },
+      );
+    }
 
     if (media) {
       if (!isAcceptedUploadMimeType(media.type)) {
@@ -111,7 +124,23 @@ export async function POST(request: Request) {
       media,
     });
 
-    void sendComplaintToTelegram(pendingComplaint).catch((error) => {
+    if (flags.mockMode) {
+      return NextResponse.json(
+        {
+          ok: true,
+        },
+        {
+          status: 201,
+          headers: {
+            "cache-control": "no-store",
+          },
+        },
+      );
+    }
+
+    void sendComplaintToTelegram(
+      pendingComplaint as Parameters<typeof sendComplaintToTelegram>[0],
+    ).catch((error) => {
       console.error(
         "Falha ao enviar a notificação de moderação para o Telegram:",
         error,

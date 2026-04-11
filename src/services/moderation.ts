@@ -3,7 +3,7 @@ import {
   clearComplaintMedia,
   getPendingComplaintForModeration,
 } from "@/db/repositories/complaints-repository";
-import { sendApprovalEmail } from "@/services/email";
+import { sendModerationStatusEmail } from "@/services/email";
 import {
   deleteStoredMedia,
   getPublicDestinationPath,
@@ -78,11 +78,14 @@ export async function moderateComplaintFromToken(
     }
   }
 
-  if (shouldApprove && emailToNotify) {
+  if (emailToNotify) {
     try {
-      await sendApprovalEmail(emailToNotify);
+      await sendModerationStatusEmail(
+        emailToNotify,
+        shouldApprove ? "approved" : "rejected",
+      );
     } catch (error) {
-      console.error("Failed to send approval email:", error);
+      console.error("Failed to send moderation email:", error);
     }
   }
 

@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { startTransition, useEffect, useEffectEvent, useRef, useState } from "react";
+import { X } from "lucide-react";
 
 import {
   campusById,
@@ -51,6 +52,7 @@ export function LandingPageShell({
   initialTotalApprovedComplaints,
 }: LandingPageShellProps) {
   const [activeCampusId, setActiveCampusId] = useState(initialCampusId);
+  const [campusFocusNonce, setCampusFocusNonce] = useState(0);
   const [complaints, setComplaints] = useState(initialComplaints);
   const [selectedComplaint, setSelectedComplaint] = useState<PublicComplaint | null>(
     null,
@@ -64,6 +66,7 @@ export function LandingPageShell({
   const [draftLocation, setDraftLocation] = useState<DraftLocation | null>(null);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [surfaceNotice, setSurfaceNotice] = useState<SurfaceNotice>(null);
+  const [isInstagramPopupVisible, setIsInstagramPopupVisible] = useState(false);
   const noticeTimeoutRef = useRef<number | null>(null);
 
   function clearSurfaceNotice() {
@@ -148,16 +151,28 @@ export function LandingPageShell({
     [],
   );
 
-  function handleCampusChange(campusId: CampusId) {
-    if (campusId === activeCampusId) {
-      return;
-    }
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setIsInstagramPopupVisible(true);
+    }, 5_000);
 
-    startTransition(() => {
-      setActiveCampusId(campusId);
+    return () => window.clearTimeout(timeout);
+  }, []);
+
+  function handleCampusChange(campusId: CampusId) {
+    setCampusFocusNonce((current) => current + 1);
+
+    if (campusId !== activeCampusId) {
+      startTransition(() => {
+        setActiveCampusId(campusId);
+        setDraftLocation(null);
+        setSelectedComplaint(null);
+      });
+    } else {
       setDraftLocation(null);
       setSelectedComplaint(null);
-    });
+    }
+
     setIsMobileDrawerOpen(false);
   }
 
@@ -216,6 +231,7 @@ export function LandingPageShell({
         <div className="relative h-full min-h-0 overflow-hidden rounded-[clamp(1.55rem,3vw,2rem)] border border-white/75 bg-[rgba(255,255,255,0.42)] shadow-[0_32px_90px_rgba(15,23,42,0.10)]">
           <MapSurface
             campus={activeCampus}
+            campusFocusNonce={campusFocusNonce}
             complaints={complaints}
             draftLocation={draftLocation}
             isLoading={isCampusLoading}
@@ -265,6 +281,53 @@ export function LandingPageShell({
                   }}
                 >
                   {surfaceNotice.message}
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {isInstagramPopupVisible && !isReportOpen ? (
+              <motion.div
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                className="absolute bottom-[5.8rem] left-3 z-[709] w-[min(20rem,calc(100%-1.5rem))] lg:bottom-4 lg:left-4 lg:w-[min(24rem,calc(100%-2rem))]"
+                exit={{ opacity: 0, y: 16, scale: 0.98 }}
+                initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <div className="rounded-[1.45rem] border border-white/80 bg-[rgba(255,255,255,0.95)] p-3 shadow-[0_22px_60px_rgba(15,23,42,0.18)] backdrop-blur-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[0.9rem] font-semibold leading-5 text-slate-900">
+                        Gostou da aplicação e quer conhecer mais propostas para a
+                        UFSC?
+                      </p>
+                      <p className="mt-1 text-sm leading-5 text-slate-600">
+                        Conheça-nos melhor!
+                      </p>
+                    </div>
+
+                    <button
+                      aria-label="Fechar convite"
+                      className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+                      onClick={() => setIsInstagramPopupVisible(false)}
+                      type="button"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </div>
+
+                  <div className="mt-3 flex justify-start">
+                    <a
+                      className="inline-flex min-h-10 items-center justify-center rounded-full px-4 text-sm font-semibold text-slate-950 transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1cd927]"
+                      href="https://www.instagram.com/mudarparatransformaraufsc/"
+                      rel="noreferrer"
+                      style={{ backgroundColor: "#1cd927" }}
+                      target="_blank"
+                    >
+                      Conhecer
+                    </a>
+                  </div>
                 </div>
               </motion.div>
             ) : null}

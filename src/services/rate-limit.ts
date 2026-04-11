@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 
 import { consumeSubmissionRateLimit } from "@/db/repositories/submission-rate-limits-repository";
-import { env } from "@/lib/env";
+import { env, flags } from "@/lib/env";
 
 function extractSubmissionKey(request: Request) {
   const forwardedFor = request.headers
@@ -21,6 +21,13 @@ function hashSubmissionKey(value: string) {
 }
 
 export async function assertSubmissionRateLimit(request: Request) {
+  if (flags.mockMode) {
+    return {
+      allowed: true,
+      retryAfterSeconds: 0,
+    };
+  }
+
   const now = new Date();
   const createdAt = now.toISOString();
   const expiresAt = new Date(
