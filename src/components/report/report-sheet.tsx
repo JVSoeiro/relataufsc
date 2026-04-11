@@ -179,7 +179,7 @@ export function ReportSheet({
             </div>
 
             {submissionState === "success" ? (
-              <div className="mt-5 flex min-h-0 flex-1 items-center overflow-y-auto pr-1">
+              <div className="mt-5 flex min-h-0 flex-1 items-center overflow-x-hidden overflow-y-auto pr-1">
                 <div className="w-full rounded-[1.6rem] border border-emerald-200 bg-emerald-50 p-5">
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="mt-0.5 size-5 text-emerald-600" />
@@ -220,7 +220,7 @@ export function ReportSheet({
               </div>
             ) : (
               <form
-                className="mt-5 grid min-h-0 flex-1 content-start gap-3 overflow-y-auto pr-1"
+                className="mt-5 grid min-h-0 flex-1 content-start gap-3 overflow-x-hidden overflow-y-auto pr-1"
                 onSubmit={handleSubmit}
                 ref={formRef}
               >
@@ -348,13 +348,13 @@ export function ReportSheet({
                   )
                 ) : null}
 
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="grid gap-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <label className="grid min-w-0 gap-2">
                     <span className="text-sm font-medium text-slate-900">
                       Nome
                     </span>
                     <input
-                      className="min-h-12 rounded-[1.1rem] border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-rose-500"
+                      className="min-h-12 w-full min-w-0 rounded-[1.1rem] border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-rose-500"
                       maxLength={80}
                       name="publicName"
                       placeholder="Opcional"
@@ -362,12 +362,12 @@ export function ReportSheet({
                     />
                   </label>
 
-                  <label className="grid gap-2">
+                  <label className="grid min-w-0 gap-2">
                     <span className="text-sm font-medium text-slate-900">
                       E-mail
                     </span>
                     <input
-                      className="min-h-12 rounded-[1.1rem] border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-rose-500"
+                      className="min-h-12 w-full min-w-0 rounded-[1.1rem] border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-rose-500"
                       name="email"
                       placeholder="Opcional"
                       type="email"
@@ -395,7 +395,7 @@ export function ReportSheet({
                 ) : null}
 
                 <button
-                  className="sticky bottom-0 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[1.15rem] bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 sm:text-base"
+                  className="sticky bottom-0 inline-flex min-h-12 w-full max-w-full items-center justify-center gap-2 rounded-[1.15rem] bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 sm:text-base"
                   disabled={submissionState === "submitting"}
                   type="submit"
                 >

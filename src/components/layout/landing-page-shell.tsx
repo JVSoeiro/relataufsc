@@ -226,8 +226,17 @@ export function LandingPageShell({
           />
 
           <div className="absolute left-3 top-3 z-[705] lg:hidden">
-            <div className="rounded-[1.5rem] border border-white/75 bg-[rgba(255,255,255,0.9)] px-4 py-3 shadow-[0_20px_45px_rgba(15,23,42,0.14)] backdrop-blur-xl">
+            <div className="rounded-[1.5rem] border border-white/70 bg-[rgba(255,255,255,0.76)] px-4 py-3 backdrop-blur-xl">
               <BrandLockup compact />
+            </div>
+          </div>
+
+          <div className="pointer-events-none absolute left-3 top-[5.55rem] z-[704] lg:left-4 lg:top-4">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/75 bg-[rgba(255,255,255,0.9)] px-3 py-2 text-[0.72rem] font-medium text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.12)] backdrop-blur-xl">
+              <span className="inline-flex size-5 items-center justify-center rounded-full bg-[#7f1d1d] text-xs font-bold text-white">
+                !
+              </span>
+              <span>Relato publicado</span>
             </div>
           </div>
 

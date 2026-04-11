@@ -25,18 +25,16 @@ export function BrandLockup({ compact = false }: BrandLockupProps) {
       </div>
 
       {brandConfig.partnerLogoSrc ? (
-        <div
-          className={`shrink-0 rounded-[1.15rem] border border-white/85 bg-white/92 shadow-[0_14px_34px_rgba(15,23,42,0.08)] ${
-            compact ? "px-3 py-2" : "px-4 py-3"
-          }`}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            alt={brandConfig.partnerLogoAlt}
-            className={compact ? "block h-9 w-auto max-w-[7rem] object-contain" : "block h-14 w-auto max-w-[9rem] object-contain"}
-            src={brandConfig.partnerLogoSrc}
-          />
-        </div>
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          alt={brandConfig.partnerLogoAlt}
+          className={
+            compact
+              ? "block h-12 w-auto max-w-[8.25rem] shrink-0 object-contain"
+              : "block h-20 w-auto max-w-[12rem] shrink-0 object-contain"
+          }
+          src={brandConfig.partnerLogoSrc}
+        />
       ) : (
         <span className="text-sm text-slate-500">{brandConfig.placeholderLabel}</span>
       )}
