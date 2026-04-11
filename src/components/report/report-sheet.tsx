@@ -25,9 +25,11 @@ type ReportSheetProps = {
   open: boolean;
   activeCampusId: CampusId;
   draftLocation: DraftLocation | null;
+  isMobileLocationFlow?: boolean;
   onCampusChange: (campusId: CampusId) => void;
   onClose: () => void;
   onLocationClear: () => void;
+  onLocationReselect?: () => void;
   onSubmitted: () => void;
 };
 
@@ -37,9 +39,11 @@ export function ReportSheet({
   open,
   activeCampusId,
   draftLocation,
+  isMobileLocationFlow = false,
   onCampusChange,
   onClose,
   onLocationClear,
+  onLocationReselect,
   onSubmitted,
 }: ReportSheetProps) {
   const isClientMockMode = process.env.NEXT_PUBLIC_MOCK_MODE === "true";
@@ -171,8 +175,9 @@ export function ReportSheet({
                   Marque e descreva.
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Escolha um campus, clique no mapa para marcar o ponto exato e
-                  envie um relato curto e claro.
+                  {isMobileLocationFlow
+                    ? "Confira o ponto marcado, complete os dados e envie um relato curto e claro."
+                    : "Escolha um campus, clique no mapa para marcar o ponto exato e envie um relato curto e claro."}
                 </p>
               </div>
 
@@ -262,12 +267,14 @@ export function ReportSheet({
                     <MapPin className="mt-0.5 size-5 text-slate-700" />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-slate-900">
-                        Clique no mapa para marcar o local do problema.
+                        {isMobileLocationFlow
+                          ? "Local do relato selecionado."
+                          : "Clique no mapa para marcar o local do problema."}
                       </p>
                       <p className="mt-1 text-sm leading-6 text-slate-600">
-                        O campus é ajustado automaticamente conforme o ponto
-                        marcado. Você pode mover a seleção
-                        antes de enviar.
+                        {isMobileLocationFlow
+                          ? "Se quiser, você pode trocar o ponto selecionado antes de enviar o relato."
+                          : "O campus é ajustado automaticamente conforme o ponto marcado. Você pode mover a seleção antes de enviar."}
                       </p>
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                         <span className="rounded-full border border-white/80 bg-white/90 px-3 py-1 text-xs font-medium text-slate-700">
@@ -281,13 +288,23 @@ export function ReportSheet({
                                 draftLocation.longitude,
                               )}
                             </span>
-                            <button
-                              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600"
-                              onClick={onLocationClear}
-                              type="button"
-                            >
-                              Limpar seleção
-                            </button>
+                            {isMobileLocationFlow && onLocationReselect ? (
+                              <button
+                                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700"
+                                onClick={onLocationReselect}
+                                type="button"
+                              >
+                                Trocar local
+                              </button>
+                            ) : (
+                              <button
+                                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600"
+                                onClick={onLocationClear}
+                                type="button"
+                              >
+                                Limpar seleção
+                              </button>
+                            )}
                           </>
                         ) : (
                           <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-900">

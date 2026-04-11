@@ -6,7 +6,13 @@ type BrandLockupProps = {
 
 export function BrandLockup({ compact = false }: BrandLockupProps) {
   return (
-    <div className="grid grid-cols-2 items-center gap-[clamp(0.95rem,2.2vw,1.7rem)]">
+    <div
+      className={
+        compact
+          ? "mx-auto grid w-full max-w-[34rem] grid-cols-2 items-center gap-[clamp(0.9rem,2vw,1.45rem)]"
+          : "grid grid-cols-2 items-center gap-[clamp(0.95rem,2.2vw,1.7rem)]"
+      }
+    >
       <div
         className={compact ? "min-w-0 text-right" : "min-w-0"}
       >
@@ -49,7 +55,7 @@ export function BrandLockup({ compact = false }: BrandLockupProps) {
           alt={brandConfig.partnerLogoAlt}
           className={
             compact
-              ? "block h-[2.9rem] w-full justify-self-end object-contain object-right"
+              ? "block h-[2.85rem] w-full justify-self-start object-contain object-left"
               : "block h-[4.05rem] w-full justify-self-end object-contain object-right"
           }
           src={brandConfig.partnerLogoSrc}

@@ -67,6 +67,9 @@ export function LandingPageShell({
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [surfaceNotice, setSurfaceNotice] = useState<SurfaceNotice>(null);
   const [isInstagramPopupVisible, setIsInstagramPopupVisible] = useState(false);
+  const [isPhoneViewport, setIsPhoneViewport] = useState(false);
+  const [isMobileLocationPickerOpen, setIsMobileLocationPickerOpen] =
+    useState(false);
   const noticeTimeoutRef = useRef<number | null>(null);
 
   function clearSurfaceNotice() {
@@ -159,6 +162,18 @@ export function LandingPageShell({
     return () => window.clearTimeout(timeout);
   }, []);
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const syncViewport = () => {
+      setIsPhoneViewport(mediaQuery.matches);
+    };
+
+    syncViewport();
+    mediaQuery.addEventListener("change", syncViewport);
+
+    return () => mediaQuery.removeEventListener("change", syncViewport);
+  }, []);
+
   function handleCampusChange(campusId: CampusId) {
     setCampusFocusNonce((current) => current + 1);
 
@@ -193,6 +208,11 @@ export function LandingPageShell({
     setDraftLocation(location);
     setSelectedComplaint(null);
 
+    if (isPhoneViewport && isMobileLocationPickerOpen) {
+      setIsMobileLocationPickerOpen(false);
+      setIsReportOpen(true);
+    }
+
     if (detectedCampus.id !== activeCampusId) {
       startTransition(() => {
         setActiveCampusId(detectedCampus.id);
@@ -207,14 +227,31 @@ export function LandingPageShell({
   function openReportSheet() {
     setSelectedComplaint(null);
     setIsMobileDrawerOpen(false);
+    if (isPhoneViewport) {
+      setDraftLocation(null);
+      setIsReportOpen(false);
+      setIsMobileLocationPickerOpen(true);
+      return;
+    }
+
     setIsReportOpen(true);
   }
 
   function closeReportSheet() {
     setIsReportOpen(false);
+    setIsMobileLocationPickerOpen(false);
+  }
+
+  function reopenMobileLocationPicker() {
+    setDraftLocation(null);
+    setIsReportOpen(false);
+    setIsMobileLocationPickerOpen(true);
   }
 
   const activeCampus = campusById[activeCampusId];
+
+  const isMobileLocationSelectionMode =
+    isPhoneViewport && isMobileLocationPickerOpen;
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-[var(--page-bg)] text-slate-950">
@@ -237,24 +274,28 @@ export function LandingPageShell({
             isLoading={isCampusLoading}
             onComplaintSelect={setSelectedComplaint}
             onDraftLocationChange={handleDraftLocationChange}
-            reportMode={isReportOpen}
+            reportMode={isReportOpen || isMobileLocationSelectionMode}
             selectedComplaintId={selectedComplaint?.id ?? null}
           />
 
-          <div className="absolute left-3 top-3 z-[705] lg:hidden">
-            <div className="rounded-[1.5rem] border border-white/70 bg-[rgba(255,255,255,0.76)] px-4 py-3 backdrop-blur-xl">
-              <BrandLockup compact />
+          {!isMobileLocationSelectionMode ? (
+            <div className="absolute inset-x-3 top-3 z-[705] lg:hidden">
+              <div className="rounded-[1.5rem] border border-white/70 bg-[rgba(255,255,255,0.76)] px-4 py-3 backdrop-blur-xl">
+                <BrandLockup compact />
+              </div>
             </div>
-          </div>
+          ) : null}
 
-          <div className="pointer-events-none absolute left-3 top-[5.55rem] z-[704] lg:left-4 lg:top-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/75 bg-[rgba(255,255,255,0.9)] px-3 py-2 text-[0.72rem] font-medium text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.12)] backdrop-blur-xl">
-              <span className="inline-flex size-5 items-center justify-center rounded-full bg-[#7f1d1d] text-xs font-bold text-white">
-                !
-              </span>
-              <span>Relato publicado</span>
+          {!isMobileLocationSelectionMode ? (
+            <div className="pointer-events-none absolute left-3 top-[5.55rem] z-[704] lg:left-4 lg:top-4">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/75 bg-[rgba(255,255,255,0.9)] px-3 py-2 text-[0.72rem] font-medium text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.12)] backdrop-blur-xl">
+                <span className="inline-flex size-5 items-center justify-center rounded-full bg-[#7f1d1d] text-xs font-bold text-white">
+                  !
+                </span>
+                <span>Relato publicado</span>
+              </div>
             </div>
-          </div>
+          ) : null}
 
           <AnimatePresence>
             {surfaceNotice ? (
@@ -287,7 +328,7 @@ export function LandingPageShell({
           </AnimatePresence>
 
           <AnimatePresence>
-            {isInstagramPopupVisible && !isReportOpen ? (
+            {isInstagramPopupVisible && !isReportOpen && !isMobileLocationSelectionMode ? (
               <motion.div
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 className="absolute right-3 top-[5.55rem] z-[709] w-[min(10.75rem,calc(100%-8.5rem))] lg:bottom-4 lg:left-4 lg:right-auto lg:top-auto lg:w-[min(24rem,calc(100%-2rem))]"
@@ -296,7 +337,7 @@ export function LandingPageShell({
                 transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               >
                 <div className="rounded-[1.3rem] border border-white/80 bg-[rgba(255,255,255,0.95)] p-3 shadow-[0_22px_60px_rgba(15,23,42,0.18)] backdrop-blur-xl">
-                  <div className="flex items-start gap-2">
+                  <div className="flex items-start gap-2 lg:hidden">
                     <div className="min-w-0 flex-1">
                       <p className="text-[0.82rem] font-semibold leading-4 text-slate-900 lg:text-[0.9rem] lg:leading-5">
                         Gostou? Conheça mais!
@@ -310,6 +351,27 @@ export function LandingPageShell({
                       type="button"
                     >
                       <X className="size-3.5 lg:size-4" />
+                    </button>
+                  </div>
+
+                  <div className="hidden items-start gap-3 lg:flex">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[0.96rem] font-semibold leading-5 text-slate-900">
+                        Gostou da aplicação e quer conhecer mais propostas para a
+                        UFSC?
+                      </p>
+                      <p className="mt-1 text-sm font-normal leading-5 text-slate-600">
+                        Conheça-nos melhor!
+                      </p>
+                    </div>
+
+                    <button
+                      aria-label="Fechar convite"
+                      className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+                      onClick={() => setIsInstagramPopupVisible(false)}
+                      type="button"
+                    >
+                      <X className="size-4" />
                     </button>
                   </div>
 
@@ -335,17 +397,54 @@ export function LandingPageShell({
             </div>
           ) : null}
 
-          <ComplaintDetailCard
-            complaint={selectedComplaint}
-            onClose={() => setSelectedComplaint(null)}
-          />
+          {!isMobileLocationSelectionMode ? (
+            <ComplaintDetailCard
+              complaint={selectedComplaint}
+              onClose={() => setSelectedComplaint(null)}
+            />
+          ) : null}
+
+          <AnimatePresence>
+            {isMobileLocationSelectionMode ? (
+              <motion.div
+                animate={{ opacity: 1, y: 0 }}
+                className="pointer-events-none absolute inset-x-3 top-3 z-[731] lg:hidden"
+                exit={{ opacity: 0, y: -14 }}
+                initial={{ opacity: 0, y: -14 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="pointer-events-auto max-w-[calc(100%-3.5rem)] rounded-[1.4rem] border border-white/80 bg-[rgba(255,255,255,0.95)] px-4 py-3 shadow-[0_20px_52px_rgba(15,23,42,0.16)] backdrop-blur-xl">
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                      Novo relato
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-slate-950">
+                      Selecione o local do relato
+                    </p>
+                  </div>
+
+                  <button
+                    className="pointer-events-auto inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-white/80 bg-[rgba(255,255,255,0.95)] text-slate-600 shadow-[0_18px_44px_rgba(15,23,42,0.14)] backdrop-blur-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+                    onClick={closeReportSheet}
+                    type="button"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
 
           <ReportSheet
             activeCampusId={activeCampusId}
             draftLocation={draftLocation}
+            isMobileLocationFlow={isPhoneViewport}
             onCampusChange={handleCampusChange}
             onClose={closeReportSheet}
             onLocationClear={() => setDraftLocation(null)}
+            onLocationReselect={
+              isPhoneViewport ? reopenMobileLocationPicker : undefined
+            }
             onSubmitted={() =>
               void fetchApprovedComplaintCount().then((nextTotal) => {
                 if (typeof nextTotal === "number") {
@@ -356,7 +455,7 @@ export function LandingPageShell({
             open={isReportOpen}
           />
 
-          {!isReportOpen ? (
+          {!isReportOpen && !isMobileLocationSelectionMode ? (
             <MobileDrawer
               activeCampusId={activeCampusId}
               isOpen={isMobileDrawerOpen}
