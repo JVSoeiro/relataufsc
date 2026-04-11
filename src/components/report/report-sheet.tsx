@@ -156,12 +156,12 @@ export function ReportSheet({
       {open ? (
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className="pointer-events-none absolute inset-x-3 bottom-3 top-[4.9rem] z-[730] lg:inset-x-auto lg:right-4 lg:top-4 lg:w-[min(31rem,calc(100%-2rem))]"
+          className="pointer-events-none absolute inset-x-2.5 bottom-2.5 top-[4.8rem] z-[730] sm:inset-x-3 sm:bottom-3 sm:top-[4.9rem] lg:inset-x-auto lg:right-4 lg:top-4 lg:w-[min(31rem,calc(100%-2rem))]"
           exit={{ opacity: 0, y: 18 }}
           initial={{ opacity: 0, y: 18 }}
           transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="pointer-events-auto flex h-full min-h-0 flex-col overflow-hidden rounded-[clamp(1.55rem,3vw,1.95rem)] border border-white/80 bg-[rgba(255,255,255,0.97)] p-[clamp(1rem,1.6vw,1.35rem)] shadow-[0_35px_90px_rgba(15,23,42,0.18)] backdrop-blur-xl">
+          <div className="pointer-events-auto flex h-full min-h-0 flex-col overflow-hidden rounded-[clamp(1.4rem,3vw,1.95rem)] border border-white/80 bg-[rgba(255,255,255,0.97)] px-[clamp(0.82rem,3.5vw,1.35rem)] py-[clamp(0.88rem,3.2vw,1.35rem)] shadow-[0_35px_90px_rgba(15,23,42,0.18)] backdrop-blur-xl">
             <div className="shrink-0 flex items-start gap-3">
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
@@ -227,16 +227,16 @@ export function ReportSheet({
               </div>
             ) : (
               <form
-                className="mt-5 grid min-h-0 flex-1 content-start gap-3 overflow-x-hidden overflow-y-auto pr-1"
+                className="mt-5 flex min-h-0 flex-1 min-w-0 flex-col gap-3 overflow-x-hidden overflow-y-auto overscroll-contain pr-0 sm:pr-1"
                 onSubmit={handleSubmit}
                 ref={formRef}
               >
-                <label className="grid gap-2">
+                <label className="grid w-full min-w-0 gap-2">
                   <span className="text-sm font-medium text-slate-900">
                     Campus
                   </span>
                   <select
-                    className="min-h-12 rounded-[1.1rem] border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-rose-500"
+                    className="min-h-12 w-full min-w-0 max-w-full rounded-[1.1rem] border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-rose-500"
                     name="campusId"
                     onChange={(event) =>
                       onCampusChange(event.currentTarget.value as CampusId)
@@ -252,7 +252,7 @@ export function ReportSheet({
                 </label>
 
                 <div
-                  className="rounded-[1.35rem] border border-dashed p-4"
+                  className="w-full min-w-0 rounded-[1.35rem] border border-dashed p-4"
                   style={{
                     borderColor: draftLocation ? `${activeCampus.accent}65` : "rgba(148,163,184,0.5)",
                     backgroundColor: draftLocation ? `${activeCampus.accent}10` : "rgba(248,250,252,0.92)",
@@ -299,12 +299,12 @@ export function ReportSheet({
                   </div>
                 </div>
 
-                <label className="grid gap-2">
+                <label className="grid w-full min-w-0 gap-2">
                   <span className="text-sm font-medium text-slate-900">
                     Descrição
                   </span>
                   <textarea
-                    className="min-h-[clamp(6.75rem,15vh,7.75rem)] rounded-[1.35rem] border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition focus:border-rose-500"
+                    className="min-h-[clamp(6.75rem,15vh,7.75rem)] w-full min-w-0 max-w-full rounded-[1.35rem] border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition focus:border-rose-500"
                     maxLength={800}
                     name="description"
                     placeholder="Descreva o que está visivelmente errado e por que isso importa."
@@ -313,11 +313,11 @@ export function ReportSheet({
                   />
                 </label>
 
-                <label className="grid gap-2">
+                <label className="grid w-full min-w-0 gap-2">
                   <span className="text-sm font-medium text-slate-900">
                     Foto e/ou vídeo
                   </span>
-                  <span className="flex min-h-12 cursor-pointer items-center gap-3 rounded-[1.2rem] border border-dashed border-slate-300 bg-slate-50 px-4 text-sm text-slate-600 transition hover:border-slate-400">
+                  <span className="flex min-h-12 w-full min-w-0 max-w-full cursor-pointer items-center gap-3 rounded-[1.2rem] border border-dashed border-slate-300 bg-slate-50 px-4 text-sm text-slate-600 transition hover:border-slate-400">
                     <Paperclip className="size-4" />
                     <span className="min-w-0 flex-1 truncate">
                       {selectedFile
@@ -342,7 +342,7 @@ export function ReportSheet({
                 {previewUrl ? (
                   selectedFile?.type.startsWith("video/") ? (
                     <video
-                      className="h-[clamp(5.2rem,12vh,7rem)] w-full rounded-[1.2rem] border border-slate-200 bg-slate-950 object-cover"
+                      className="h-[clamp(5.2rem,12vh,7rem)] w-full min-w-0 max-w-full rounded-[1.2rem] border border-slate-200 bg-slate-950 object-cover"
                       controls
                       muted
                       playsInline
@@ -352,14 +352,14 @@ export function ReportSheet({
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       alt=""
-                      className="h-[clamp(5.2rem,12vh,7rem)] w-full rounded-[1.2rem] border border-slate-200 bg-slate-100 object-cover"
+                      className="h-[clamp(5.2rem,12vh,7rem)] w-full min-w-0 max-w-full rounded-[1.2rem] border border-slate-200 bg-slate-100 object-cover"
                       src={previewUrl}
                     />
                   )
                 ) : null}
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <label className="grid min-w-0 gap-2">
+                <div className="grid w-full min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+                  <label className="grid w-full min-w-0 gap-2">
                     <span className="text-sm font-medium text-slate-900">
                       Nome
                     </span>
@@ -372,7 +372,7 @@ export function ReportSheet({
                     />
                   </label>
 
-                  <label className="grid min-w-0 gap-2">
+                  <label className="grid w-full min-w-0 gap-2">
                     <span className="text-sm font-medium text-slate-900">
                       E-mail
                     </span>
@@ -393,38 +393,40 @@ export function ReportSheet({
                   type="text"
                 />
 
-                <div className="rounded-[1.2rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
+                <div className="w-full min-w-0 rounded-[1.2rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
                   {siteConfig.reportPrivacyNote}
                 </div>
 
                 {submissionState === "error" && errorMessage ? (
-                  <div className="flex items-start gap-3 rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">
+                  <div className="flex w-full min-w-0 items-start gap-3 rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">
                     <AlertCircle className="mt-0.5 size-4 shrink-0" />
                     <span>{errorMessage}</span>
                   </div>
                 ) : null}
 
-                <button
-                  className="sticky bottom-0 inline-flex min-h-12 w-full max-w-full items-center justify-center gap-2 rounded-[1.15rem] bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 sm:text-base"
-                  disabled={submissionState === "submitting"}
-                  type="submit"
-                >
-                  {submissionState === "submitting" ? (
-                    <>
-                      <LoaderCircle className="size-4 animate-spin" />
-                      Enviando relato
-                    </>
-                  ) : draftLocation && (selectedFile || isClientMockMode) ? (
-                    "Enviar relato"
-                  ) : (
-                    <>
-                      <CircleOff className="size-4" />
-                      {!draftLocation
-                        ? "Marque primeiro o local no mapa"
-                        : "Adicione uma imagem ou video"}
-                    </>
-                  )}
-                </button>
+                <div className="sticky bottom-0 z-10 mt-1 w-full min-w-0 bg-[linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,0.96)_22%,rgba(255,255,255,0.98)_100%)] pb-1 pt-3">
+                  <button
+                    className="inline-flex min-h-12 w-full min-w-0 max-w-full items-center justify-center gap-2 rounded-[1.15rem] bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-black disabled:cursor-not-allowed disabled:opacity-70 sm:text-base"
+                    disabled={submissionState === "submitting"}
+                    type="submit"
+                  >
+                    {submissionState === "submitting" ? (
+                      <>
+                        <LoaderCircle className="size-4 animate-spin" />
+                        Enviando relato
+                      </>
+                    ) : draftLocation && (selectedFile || isClientMockMode) ? (
+                      "Enviar relato"
+                    ) : (
+                      <>
+                        <CircleOff className="size-4 shrink-0" />
+                        {!draftLocation
+                          ? "Marque primeiro o local no mapa"
+                          : "Adicione uma imagem ou vídeo"}
+                      </>
+                    )}
+                  </button>
+                </div>
               </form>
             )}
           </div>
