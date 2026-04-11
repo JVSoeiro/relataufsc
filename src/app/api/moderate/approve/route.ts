@@ -5,12 +5,8 @@ import { moderateComplaintFromToken } from "@/services/moderation";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(request: Request) {
+async function handleApprove(token: string | null) {
   await bootstrapApp();
-
-  const formData = await request.formData();
-  const tokenValue = formData.get("token");
-  const token = typeof tokenValue === "string" ? tokenValue : null;
 
   if (!token) {
     return createModerationHtmlResponse(
@@ -41,7 +37,19 @@ export async function POST(request: Request) {
   return createModerationHtmlResponse({
     title: "Relato aprovado",
     message:
-      "O relato agora está visível no RelataUFSC. Se a pessoa enviou um e-mail, a notificação de status foi tentada e o endereço armazenado foi removido em seguida.",
+      "Tudo certo. O relato foi publicado e, se havia e-mail informado, a notificação de aprovação já foi processada. Pode fechar esta janela.",
     accent: "#0f766e",
   });
+}
+
+export async function GET(request: Request) {
+  const token = new URL(request.url).searchParams.get("token");
+  return handleApprove(token);
+}
+
+export async function POST(request: Request) {
+  const formData = await request.formData();
+  const tokenValue = formData.get("token");
+  const token = typeof tokenValue === "string" ? tokenValue : null;
+  return handleApprove(token);
 }

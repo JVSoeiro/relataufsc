@@ -29,7 +29,9 @@ type PendingComplaintForTelegram = {
 };
 
 function createModerationPageUrl(action: "approve" | "reject", token: string) {
-  return `${env.appUrl}/moderate/${action}?token=${encodeURIComponent(token)}`;
+  return `${env.appUrl}/api/moderate/${action}?token=${encodeURIComponent(
+    token,
+  )}`;
 }
 
 function createPreviewUrl(complaintId: string, token: string) {

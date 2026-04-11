@@ -66,6 +66,11 @@ export function renderModerationResultPage({
         color: white;
         font-weight: 600;
       }
+      .hint {
+        margin-top: 16px;
+        font-size: 0.92rem;
+        color: #64748b;
+      }
       .dot {
         width: 10px;
         height: 10px;
@@ -80,6 +85,7 @@ export function renderModerationResultPage({
       <h1>${title}</h1>
       <p>${message}</p>
       <div class="pill"><span class="dot"></span>Fluxo seguro de moderação</div>
+      <p class="hint">Você já pode fechar esta janela.</p>
     </main>
   </body>
 </html>`;
