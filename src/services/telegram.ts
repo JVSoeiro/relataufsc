@@ -1,5 +1,6 @@
 import { basename } from "node:path";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
+import { lookup } from "node:dns/promises";
 
 import { campusById, type CampusId } from "@/config/campuses";
 import { env, flags } from "@/lib/env";
@@ -74,6 +75,71 @@ function buildModerationText(
     .join("\n");
 }
 
+function maskToken(token: string | null) {
+  if (!token) return "<missing>";
+  if (token.length <= 12) return token.replace(/.(?=.{4})/g, "*");
+  return `${token.slice(0, 6)}…${token.slice(-4)}`;
+}
+
+function maskChatId(id: string | null) {
+  if (!id) return "<missing>";
+  // keep last 4 digits
+  if (/^\d+$/.test(id)) return `****${id.slice(-4)}`;
+  return id.replace(/.(?=.{4})/g, "*");
+}
+
+async function logDetailedTelegramError(
+  method: string,
+  err: unknown,
+  opts?: {
+    complaint?: PendingComplaintForTelegram | null;
+    responseText?: string | null;
+    responseStatus?: number | null;
+  },
+) {
+  try {
+    const masked = {
+      token: maskToken(env.telegramBotToken ?? null),
+      chat: maskChatId(env.telegramChatId ?? null),
+      nodeEnv: env.nodeEnv,
+      telegramConfigured: flags.telegramConfigured,
+    } as const;
+
+    let dnsInfo = "dns-lookup-failed";
+    try {
+      const lookupRes = await lookup("api.telegram.org");
+      dnsInfo = `${lookupRes.address} (family ${lookupRes.family})`;
+    } catch (e) {
+      dnsInfo = `lookup-error:${String(e)}`;
+    }
+
+    let fileInfo: string | null = null;
+    if (opts?.complaint?.mediaPath) {
+      try {
+        const abs = resolveStoredMediaPath(opts.complaint.mediaPath);
+        const st = await stat(abs);
+        fileInfo = `${abs} (${st.size} bytes)`;
+      } catch (e) {
+        fileInfo = `stat-failed:${String(e)}`;
+      }
+    }
+
+    console.error("Telegram detailed diagnostic:", {
+      when: new Date().toISOString(),
+      method,
+      masked,
+      dnsInfo,
+      responseStatus: opts?.responseStatus ?? null,
+      responseText: opts?.responseText ?? null,
+      complaintId: opts?.complaint?.id ?? null,
+      media: fileInfo,
+      error: err instanceof Error ? { message: err.message, name: err.name, stack: err.stack } : String(err),
+    });
+  } catch (loggingError) {
+    console.error("Failed to produce Telegram diagnostic log:", loggingError);
+  }
+}
+
 function createInlineKeyboard(
   approveToken: string,
   rejectToken: string,
@@ -106,19 +172,32 @@ function createInlineKeyboard(
 }
 
 async function sendTelegramJson(method: string, body: Record<string, unknown>) {
-  const response = await fetch(
-    `https://api.telegram.org/bot${env.telegramBotToken}/${method}`,
-    {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
+  try {
+    const response = await fetch(
+      `https://api.telegram.org/bot${env.telegramBotToken}/${method}`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(body),
       },
-      body: JSON.stringify(body),
-    },
-  );
+    );
 
-  if (!response.ok) {
-    throw new Error(`Telegram ${method} request failed.`);
+    if (!response.ok) {
+      const bodyText = await response.text().catch(() => "<unreadable body>");
+      const error = new Error(
+        `Telegram ${method} request failed: ${response.status} ${response.statusText} - ${bodyText}`,
+      );
+      await logDetailedTelegramError(method, error, {
+        responseStatus: response.status,
+        responseText: bodyText,
+      });
+      throw error;
+    }
+  } catch (err) {
+    await logDetailedTelegramError(method, err as unknown, { responseText: null, responseStatus: null });
+    throw new Error(`Telegram ${method} request failed: ${String(err)}`);
   }
 }
 
@@ -129,34 +208,55 @@ async function sendTelegramMedia(
   caption: string,
   keyboard: ReturnType<typeof createInlineKeyboard>,
 ) {
-  const absoluteMediaPath = resolveStoredMediaPath(complaint.mediaPath!);
-  const fileBuffer = await readFile(absoluteMediaPath);
-  const formData = new FormData();
+  try {
+    const absoluteMediaPath = resolveStoredMediaPath(complaint.mediaPath!);
+    let fileBuffer: ArrayBufferLike;
+    try {
+      fileBuffer = await readFile(absoluteMediaPath);
+    } catch (readErr) {
+      await logDetailedTelegramError(method, readErr as unknown, { complaint });
+      throw readErr;
+    }
 
-  formData.set("chat_id", env.telegramChatId!);
-  formData.set("caption", caption);
-  formData.set("reply_markup", JSON.stringify(keyboard));
-  formData.set(
-    fieldName,
-    new File([fileBuffer], basename(absoluteMediaPath), {
-      type: complaint.mediaMimeType ?? undefined,
-    }),
-  );
+    const formData = new FormData();
 
-  if (fieldName === "video") {
-    formData.set("supports_streaming", "true");
-  }
+    formData.set("chat_id", env.telegramChatId!);
+    formData.set("caption", caption);
+    formData.set("reply_markup", JSON.stringify(keyboard));
+    formData.set(
+      fieldName,
+      new File([fileBuffer as any], basename(absoluteMediaPath), {
+        type: complaint.mediaMimeType ?? undefined,
+      }),
+    );
 
-  const response = await fetch(
-    `https://api.telegram.org/bot${env.telegramBotToken}/${method}`,
-    {
-      method: "POST",
-      body: formData,
-    },
-  );
+    if (fieldName === "video") {
+      formData.set("supports_streaming", "true");
+    }
 
-  if (!response.ok) {
-    throw new Error(`Telegram ${method} request failed.`);
+    const response = await fetch(
+      `https://api.telegram.org/bot${env.telegramBotToken}/${method}`,
+      {
+        method: "POST",
+        body: formData,
+      },
+    );
+
+    if (!response.ok) {
+      const bodyText = await response.text().catch(() => "<unreadable body>");
+      const error = new Error(
+        `Telegram ${method} request failed: ${response.status} ${response.statusText} - ${bodyText}`,
+      );
+      await logDetailedTelegramError(method, error, {
+        complaint,
+        responseStatus: response.status,
+        responseText: bodyText,
+      });
+      throw error;
+    }
+  } catch (err) {
+    await logDetailedTelegramError(method, err as unknown, { complaint });
+    throw err;
   }
 }
 
@@ -216,16 +316,19 @@ export async function sendComplaintToTelegram(
       return;
     }
   } catch (error) {
-    console.error(
-      "Falha ao enviar a mídia para o Telegram; usando mensagem de texto:",
-      error,
-    );
+    await logDetailedTelegramError("sendMedia", error as unknown, { complaint });
+    console.error("Falha ao enviar a mídia para o Telegram; usando mensagem de texto:", error);
   }
 
-  await sendTelegramJson("sendMessage", {
-    chat_id: env.telegramChatId,
-    text,
-    reply_markup: keyboard,
-    disable_web_page_preview: false,
-  });
+  try {
+    await sendTelegramJson("sendMessage", {
+      chat_id: env.telegramChatId,
+      text,
+      reply_markup: keyboard,
+      disable_web_page_preview: false,
+    });
+  } catch (err) {
+    await logDetailedTelegramError("sendMessage", err as unknown, { complaint });
+    throw err;
+  }
 }
