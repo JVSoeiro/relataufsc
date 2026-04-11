@@ -1,6 +1,6 @@
 # RelataUFSC
 
-O RelataUFSC é um MVP em produção para relatar problemas visíveis de infraestrutura nos campi da UFSC por meio de um mapa público. A aplicação roda como um único container Next.js, com MySQL/MariaDB, uploads persistidos em disco, moderação por Telegram e e-mail transacional opcional via Brevo SMTP.
+O RelataUFSC é um MVP em produção para relatar problemas visíveis de infraestrutura nos campi da UFSC por meio de um mapa público. A aplicação roda como um único container Next.js, com Postgres/Supabase, uploads persistidos em disco, moderação por Telegram e e-mail transacional opcional via Brevo SMTP.
 
 ## Escopo
 
@@ -14,7 +14,7 @@ O RelataUFSC é um MVP em produção para relatar problemas visíveis de infraes
 
 ## Modelo de persistência
 
-O schema MySQL/MariaDB é propositalmente mínimo e orientado à privacidade.
+O schema Postgres é propositalmente mínimo e orientado à privacidade.
 
 Tabela principal: `complaints`
 
@@ -168,7 +168,7 @@ Principais variáveis:
 
 - `APP_URL`
 - `APP_NAME`
-- `DATABASE_URL`
+- `POSTGRES_URL`
 - `MOCK_MODE`
 - `DATA_DIR`
 - `UPLOAD_PENDING_DIR`
@@ -190,13 +190,13 @@ Principais variáveis:
 
 Notas:
 
-- `DATABASE_URL` é obrigatória em runtime e deve apontar para o banco MySQL/MariaDB do Dokploy.
-- Se o nome do banco tiver espaços, use URL encoding, por exemplo `%20`.
-- Para rodar localmente sem banco real, use `MOCK_MODE=true` e deixe `DATABASE_URL` vazia.
+- `POSTGRES_URL` é obrigatória em runtime e deve apontar para o Postgres do Supabase.
+- Prefira a URL do pooler (`6543`) com `sslmode=require` e `pgbouncer=true`.
+- Para rodar localmente sem banco real, use `MOCK_MODE=true` e deixe `POSTGRES_URL` vazia.
 
 ## Modo mock local
 
-Para abrir a aplicação localmente sem MySQL, Telegram ou Brevo:
+Para abrir a aplicação localmente sem Postgres, Telegram ou Brevo:
 
 1. Ajuste o `.env` local:
 
@@ -205,7 +205,7 @@ NODE_ENV=development
 APP_URL=http://localhost:5000
 MOCK_MODE=true
 NEXT_PUBLIC_MOCK_MODE=true
-DATABASE_URL=
+POSTGRES_URL=
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 BREVO_SMTP_LOGIN=
@@ -293,7 +293,7 @@ Configuração recomendada no Dokploy:
 3. Monte um volume persistente em `/app/data` para uploads
 4. Exponha a porta `5000`
 5. Defina `APP_URL` com a URL HTTPS final do site
-6. Configure `DATABASE_URL` com a URL interna do banco do Dokploy
+6. Configure `POSTGRES_URL` com a URL do pooler do Supabase
 7. Garanta que o volume persistente seja gravável pelo usuário do container
 
 Comportamento operacional:

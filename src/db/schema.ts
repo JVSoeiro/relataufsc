@@ -1,24 +1,25 @@
 import {
-  double,
+  doublePrecision,
   index,
-  int,
-  mysqlTable,
+  integer,
+  pgTable,
+  serial,
   text,
   varchar,
-} from "drizzle-orm/mysql-core";
+} from "drizzle-orm/pg-core";
 
-export const complaints = mysqlTable(
+export const complaints = pgTable(
   "complaints",
   {
     id: varchar("id", { length: 191 }).primaryKey(),
     description: text("description").notNull(),
     campusId: varchar("campus_id", { length: 64 }).notNull(),
-    latitude: double("latitude").notNull(),
-    longitude: double("longitude").notNull(),
+    latitude: doublePrecision("latitude").notNull(),
+    longitude: doublePrecision("longitude").notNull(),
     mediaPath: varchar("media_path", { length: 1024 }),
     mediaKind: varchar("media_kind", { length: 24 }),
     mediaMimeType: varchar("media_mime_type", { length: 191 }),
-    mediaSizeBytes: int("media_size_bytes", { unsigned: true }),
+    mediaSizeBytes: integer("media_size_bytes"),
     publicName: varchar("public_name", { length: 191 }),
     submitterEmail: varchar("submitter_email", { length: 191 }),
     status: varchar("status", { length: 24 }).notNull().default("pending"),
@@ -34,10 +35,10 @@ export const complaints = mysqlTable(
   ],
 );
 
-export const submissionRateLimits = mysqlTable(
+export const submissionRateLimits = pgTable(
   "submission_rate_limits",
   {
-    id: int("id").autoincrement().primaryKey(),
+    id: serial("id").primaryKey(),
     keyHash: varchar("key_hash", { length: 128 }).notNull(),
     createdAt: varchar("created_at", { length: 40 }).notNull(),
     expiresAt: varchar("expires_at", { length: 40 }).notNull(),

@@ -1,5 +1,3 @@
-import type { ResultSetHeader } from "mysql2/promise";
-
 import { pool } from "@/db";
 
 const demoComplaints = [
@@ -95,42 +93,40 @@ const demoComplaints = [
 
 export async function seedDemoComplaints() {
   for (const demoComplaint of demoComplaints) {
-    await pool.execute<ResultSetHeader>(
-      `
-        INSERT IGNORE INTO complaints (
-          id,
-          description,
-          campus_id,
-          latitude,
-          longitude,
-          public_name,
-          status,
-          created_at,
-          approved_at,
-          moderated_at,
-          submitter_email
-        ) VALUES (?, ?, ?, ?, ?, ?, 'approved', ?, ?, ?, NULL)
-      `,
-      [
-        demoComplaint.id,
-        demoComplaint.description,
-        demoComplaint.campusId,
-        demoComplaint.latitude,
-        demoComplaint.longitude,
-        demoComplaint.publicName,
-        demoComplaint.createdAt,
-        demoComplaint.approvedAt,
-        demoComplaint.approvedAt,
-      ],
-    );
+    await pool`
+      INSERT INTO complaints (
+        id,
+        description,
+        campus_id,
+        latitude,
+        longitude,
+        public_name,
+        status,
+        created_at,
+        approved_at,
+        moderated_at,
+        submitter_email
+      ) VALUES (
+        ${demoComplaint.id},
+        ${demoComplaint.description},
+        ${demoComplaint.campusId},
+        ${demoComplaint.latitude},
+        ${demoComplaint.longitude},
+        ${demoComplaint.publicName},
+        'approved',
+        ${demoComplaint.createdAt},
+        ${demoComplaint.approvedAt},
+        ${demoComplaint.approvedAt},
+        NULL
+      )
+      ON CONFLICT (id) DO NOTHING
+    `;
   }
 }
 
 export async function clearDemoComplaints() {
-  await pool.execute<ResultSetHeader>(
-    `
-      DELETE FROM complaints
-      WHERE id LIKE 'demo-%' OR id LIKE 'mock\\_%'
-    `,
-  );
+  await pool.unsafe(`
+    DELETE FROM complaints
+    WHERE id LIKE 'demo-%' OR id LIKE 'mock\\_%' ESCAPE '\\'
+  `);
 }

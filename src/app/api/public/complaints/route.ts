@@ -8,8 +8,6 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  await bootstrapApp();
-
   const parsedQuery = publicComplaintsQuerySchema.safeParse({
     campusId: request.nextUrl.searchParams.get("campusId"),
   });
@@ -28,14 +26,36 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  return NextResponse.json(
-    {
-      complaints: await listPublicComplaintsByCampus(parsedQuery.data.campusId),
-    },
-    {
-      headers: {
-        "cache-control": "no-store",
+  try {
+    await bootstrapApp();
+
+    return NextResponse.json(
+      {
+        complaints: await listPublicComplaintsByCampus(parsedQuery.data.campusId),
       },
-    },
-  );
+      {
+        headers: {
+          "cache-control": "no-store",
+        },
+      },
+    );
+  } catch (error) {
+    console.error(
+      `Falha ao carregar relatos públicos do campus ${parsedQuery.data.campusId}; retornando fallback vazio.`,
+      error,
+    );
+
+    return NextResponse.json(
+      {
+        complaints: [],
+        degraded: true,
+      },
+      {
+        headers: {
+          "cache-control": "no-store",
+          "x-relataufsc-degraded": "true",
+        },
+      },
+    );
+  }
 }

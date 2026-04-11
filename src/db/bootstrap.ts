@@ -18,7 +18,9 @@ export async function bootstrapApp() {
   }
 
   if (!flags.databaseConfigured) {
-    throw new Error("DATABASE_URL is required to bootstrap RelataUFSC.");
+    throw new Error(
+      "POSTGRES_URL is required to bootstrap RelataUFSC.",
+    );
   }
 
   await runMigrations();

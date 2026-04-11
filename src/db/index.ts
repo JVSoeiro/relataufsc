@@ -1,39 +1,37 @@
-import type { Pool } from "mysql2/promise";
-import mysql from "mysql2/promise";
-import { drizzle } from "drizzle-orm/mysql2";
+import type { Sql } from "postgres";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
 
-import { getMysqlConnectionOptions } from "@/db/mysql-connection";
+import {
+  getPostgresClientOptions,
+  getPostgresConnectionString,
+} from "@/db/postgres-connection";
 import * as schema from "@/db/schema";
 
-function createPoolInstance() {
-  return mysql.createPool({
-    ...getMysqlConnectionOptions(),
-    connectionLimit: 10,
-    enableKeepAlive: true,
-    idleTimeout: 60_000,
-    maxIdle: 10,
-    queueLimit: 0,
-    waitForConnections: true,
-  });
+function createSqlClient() {
+  return postgres(
+    getPostgresConnectionString(),
+    getPostgresClientOptions(),
+  );
 }
 
-function createDrizzleDatabase(pool: Pool) {
-  return drizzle(pool, { schema, mode: "default" });
+function createDrizzleDatabase(client: Sql) {
+  return drizzle(client, { schema });
 }
 
 type AppDatabase = ReturnType<typeof createDrizzleDatabase>;
 
-let poolInstance: Pool | null = null;
+let sqlInstance: Sql | null = null;
 let dbInstance: AppDatabase | null = null;
 
-function ensurePoolInstance() {
-  if (poolInstance) {
-    return poolInstance;
+function ensureSqlInstance() {
+  if (sqlInstance) {
+    return sqlInstance;
   }
 
-  poolInstance = createPoolInstance();
+  sqlInstance = createSqlClient();
 
-  return poolInstance;
+  return sqlInstance;
 }
 
 function ensureDbInstance() {
@@ -41,14 +39,23 @@ function ensureDbInstance() {
     return dbInstance;
   }
 
-  dbInstance = createDrizzleDatabase(ensurePoolInstance());
+  dbInstance = createDrizzleDatabase(ensureSqlInstance());
 
   return dbInstance;
 }
 
-export const pool = new Proxy({} as Pool, {
+const poolTarget = (() => ensureSqlInstance()) as unknown as Sql;
+
+export const pool = new Proxy(poolTarget, {
+  apply(_target, thisArg, argArray) {
+    return Reflect.apply(
+      ensureSqlInstance() as unknown as typeof poolTarget,
+      thisArg,
+      argArray,
+    );
+  },
   get(_target, property, receiver) {
-    return Reflect.get(ensurePoolInstance(), property, receiver);
+    return Reflect.get(ensureSqlInstance(), property, receiver);
   },
 });
 
@@ -59,9 +66,9 @@ export const db = new Proxy({} as AppDatabase, {
 });
 
 export async function closeDatabasePool() {
-  if (poolInstance) {
-    await poolInstance.end();
-    poolInstance = null;
+  if (sqlInstance) {
+    await sqlInstance.end({ timeout: 5 });
+    sqlInstance = null;
     dbInstance = null;
   }
 }

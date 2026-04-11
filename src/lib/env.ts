@@ -36,6 +36,18 @@ const envSchema = z
       emptyStringToUndefined,
       z.string().min(1).optional(),
     ),
+    POSTGRES_URL: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    POSTGRES_PRISMA_URL: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
+    POSTGRES_URL_NON_POOLING: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(1).optional(),
+    ),
     MOCK_MODE: z.preprocess(
       emptyStringToUndefined,
       z.enum(["true", "false"]).default("false"),
@@ -188,7 +200,12 @@ export const env = {
   appUrl: parsedEnv.APP_URL.replace(/\/$/, ""),
   appName: parsedEnv.APP_NAME,
   dataDir: parsedEnv.DATA_DIR,
-  databaseUrl: parsedEnv.DATABASE_URL ?? null,
+  databaseUrl:
+    parsedEnv.POSTGRES_URL ??
+    parsedEnv.POSTGRES_PRISMA_URL ??
+    parsedEnv.POSTGRES_URL_NON_POOLING ??
+    parsedEnv.DATABASE_URL ??
+    null,
   mockMode: parsedEnv.MOCK_MODE === "true",
   uploadPendingDir: derivedUploadPendingDir,
   uploadPublicDir: derivedUploadPublicDir,
@@ -232,7 +249,9 @@ export function assertOperationalEnvironment() {
   }
 
   if (env.nodeEnv === "production" && !flags.databaseConfigured) {
-    throw new Error("DATABASE_URL is required in production.");
+    throw new Error(
+      "POSTGRES_URL is required in production. DATABASE_URL remains supported only as a legacy fallback.",
+    );
   }
 
   if (env.nodeEnv === "production" && !flags.telegramConfigured) {
