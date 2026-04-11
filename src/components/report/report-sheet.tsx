@@ -154,8 +154,8 @@ export function ReportSheet({
           initial={{ opacity: 0, y: 18 }}
           transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="pointer-events-auto flex h-full flex-col overflow-hidden rounded-[clamp(1.55rem,3vw,1.95rem)] border border-white/80 bg-[rgba(255,255,255,0.97)] p-[clamp(1rem,1.6vw,1.35rem)] shadow-[0_35px_90px_rgba(15,23,42,0.18)] backdrop-blur-xl">
-            <div className="flex items-start gap-3">
+          <div className="pointer-events-auto flex h-full min-h-0 flex-col overflow-hidden rounded-[clamp(1.55rem,3vw,1.95rem)] border border-white/80 bg-[rgba(255,255,255,0.97)] p-[clamp(1rem,1.6vw,1.35rem)] shadow-[0_35px_90px_rgba(15,23,42,0.18)] backdrop-blur-xl">
+            <div className="shrink-0 flex items-start gap-3">
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
                   Relatar problema
@@ -170,7 +170,7 @@ export function ReportSheet({
               </div>
 
               <button
-                className="inline-flex size-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
+                className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
                 onClick={onClose}
                 type="button"
               >
@@ -179,7 +179,7 @@ export function ReportSheet({
             </div>
 
             {submissionState === "success" ? (
-              <div className="mt-5 flex flex-1 items-center">
+              <div className="mt-5 flex min-h-0 flex-1 items-center overflow-y-auto pr-1">
                 <div className="w-full rounded-[1.6rem] border border-emerald-200 bg-emerald-50 p-5">
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="mt-0.5 size-5 text-emerald-600" />
@@ -220,7 +220,7 @@ export function ReportSheet({
               </div>
             ) : (
               <form
-                className="mt-5 grid gap-3"
+                className="mt-5 grid min-h-0 flex-1 content-start gap-3 overflow-y-auto pr-1"
                 onSubmit={handleSubmit}
                 ref={formRef}
               >
@@ -229,7 +229,7 @@ export function ReportSheet({
                     Campus
                   </span>
                   <select
-                    className="min-h-12 rounded-[1.1rem] border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-teal-600"
+                    className="min-h-12 rounded-[1.1rem] border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-rose-500"
                     name="campusId"
                     onChange={(event) =>
                       onCampusChange(event.currentTarget.value as CampusId)
@@ -297,7 +297,7 @@ export function ReportSheet({
                     Descrição
                   </span>
                   <textarea
-                    className="min-h-[clamp(6.75rem,15vh,7.75rem)] rounded-[1.35rem] border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition focus:border-teal-600"
+                    className="min-h-[clamp(6.75rem,15vh,7.75rem)] rounded-[1.35rem] border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition focus:border-rose-500"
                     maxLength={800}
                     name="description"
                     placeholder="Descreva o que está visivelmente errado e por que isso importa."
@@ -354,7 +354,7 @@ export function ReportSheet({
                       Nome
                     </span>
                     <input
-                      className="min-h-12 rounded-[1.1rem] border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-teal-600"
+                      className="min-h-12 rounded-[1.1rem] border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-rose-500"
                       maxLength={80}
                       name="publicName"
                       placeholder="Opcional"
@@ -367,7 +367,7 @@ export function ReportSheet({
                       E-mail
                     </span>
                     <input
-                      className="min-h-12 rounded-[1.1rem] border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-teal-600"
+                      className="min-h-12 rounded-[1.1rem] border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-rose-500"
                       name="email"
                       placeholder="Opcional"
                       type="email"
@@ -395,7 +395,7 @@ export function ReportSheet({
                 ) : null}
 
                 <button
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[1.15rem] bg-slate-950 px-5 text-base font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="sticky bottom-0 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[1.15rem] bg-rose-600 px-4 py-3 text-center text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-70 sm:text-base"
                   disabled={submissionState === "submitting"}
                   type="submit"
                 >

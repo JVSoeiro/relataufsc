@@ -31,7 +31,7 @@ export function DesktopSidebar({
           }}
         >
           <AnimatedCounter
-            className="font-[family:var(--font-display)] text-[clamp(2.15rem,3vw,3rem)] font-semibold leading-[1.02] tracking-tight text-slate-950"
+            className="overflow-hidden text-ellipsis whitespace-nowrap font-[family:var(--font-display)] text-[clamp(1.8rem,2.7vw,2.35rem)] font-semibold leading-none tracking-tight text-rose-600"
             formatter={siteConfig.metricLabel}
             value={totalApprovedComplaints}
           />
@@ -59,7 +59,7 @@ export function DesktopSidebar({
         </p>
 
         <button
-          className="mt-auto inline-flex min-h-14 items-center justify-center rounded-[1.2rem] bg-slate-950 px-5 text-base font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
+          className="mt-auto inline-flex min-h-14 w-full items-center justify-center rounded-[1.2rem] bg-rose-600 px-5 text-center text-base font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
           onClick={onReportClick}
           type="button"
         >

@@ -9,8 +9,12 @@ type BrandLockupProps = {
 
 export function BrandLockup({ compact = false }: BrandLockupProps) {
   return (
-    <div className={`flex items-center ${compact ? "gap-2.5" : "gap-3.5"}`}>
-      <div className="min-w-0">
+    <div
+      className={`flex items-center justify-between ${
+        compact ? "gap-3" : "gap-4"
+      }`}
+    >
+      <div className="min-w-0 flex-1">
         <h1
           className={
             compact
@@ -23,11 +27,20 @@ export function BrandLockup({ compact = false }: BrandLockupProps) {
       </div>
 
       {brandConfig.partnerLogoSrc ? (
-        <img
-          alt={brandConfig.partnerLogoAlt}
-          className={compact ? "h-10 w-auto object-contain" : "h-16 w-auto object-contain"}
-          src={brandConfig.partnerLogoSrc}
-        />
+        <div
+          className={`shrink-0 rounded-[1.15rem] border border-white/85 bg-white/92 shadow-[0_14px_34px_rgba(15,23,42,0.08)] ${
+            compact ? "px-3 py-2" : "px-4 py-3"
+          }`}
+        >
+          <Image
+            alt={brandConfig.partnerLogoAlt}
+            className={compact ? "h-9 w-auto object-contain" : "h-14 w-auto object-contain"}
+            height={compact ? 36 : 56}
+            priority
+            src={brandConfig.partnerLogoSrc}
+            width={compact ? 92 : 142}
+          />
+        </div>
       ) : (
         <span className="text-sm text-slate-500">{brandConfig.placeholderLabel}</span>
       )}

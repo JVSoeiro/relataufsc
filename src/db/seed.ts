@@ -26,6 +26,28 @@ const demoComplaints = [
     approvedAt: "2026-03-10T08:15:00.000Z",
   },
   {
+    id: "demo-floripa-crosswalk-drainage",
+    description:
+      "A faixa de travessia acumula água e forma poças grandes após chuva, atrapalhando a passagem de pedestres e bicicletas.",
+    campusId: "florianopolis",
+    latitude: -27.6049,
+    longitude: -48.5219,
+    publicName: "Relato demonstrativo",
+    createdAt: "2026-03-11T10:15:00.000Z",
+    approvedAt: "2026-03-11T13:05:00.000Z",
+  },
+  {
+    id: "demo-floripa-sidewalk-light-pole",
+    description:
+      "O poste de iluminação ao lado da calçada está apagado, deixando o trecho escuro no começo da noite e reduzindo a sensação de segurança.",
+    campusId: "florianopolis",
+    latitude: -27.6088,
+    longitude: -48.5168,
+    publicName: null,
+    createdAt: "2026-03-12T19:40:00.000Z",
+    approvedAt: "2026-03-12T21:10:00.000Z",
+  },
+  {
     id: "demo-joinville-accessibility",
     description:
       "A rampa de acessibilidade apresenta desgaste visível e um desnível brusco que precisa de reparo.",

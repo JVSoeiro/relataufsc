@@ -60,10 +60,10 @@ export function MobileDrawer({
         className="pointer-events-auto rounded-[1.8rem] border border-white/80 bg-[rgba(255,255,255,0.9)] p-3 shadow-[0_28px_70px_rgba(15,23,42,0.18)] backdrop-blur-xl"
         layout
       >
-        <div className="flex items-center gap-2.5">
-          <div className="min-w-0 flex-1 rounded-[1.25rem] border border-white/80 bg-white/85 px-3 py-2.5">
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="col-span-2 min-w-0 rounded-[1.25rem] border border-white/80 bg-white/85 px-3 py-2.5">
             <AnimatedCounter
-              className="font-[family:var(--font-display)] text-[clamp(1rem,4vw,1.3rem)] font-semibold leading-tight tracking-tight text-slate-950"
+              className="overflow-hidden text-ellipsis whitespace-nowrap font-[family:var(--font-display)] text-[clamp(1rem,4.8vw,1.28rem)] font-semibold leading-none tracking-tight text-rose-600"
               formatter={siteConfig.metricLabel}
               value={totalApprovedComplaints}
             />
@@ -73,23 +73,21 @@ export function MobileDrawer({
           </div>
 
           <button
-            className="inline-flex min-h-12 items-center gap-2 rounded-[1.15rem] border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
+            className="inline-flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-[1.15rem] border border-slate-200 bg-white px-3 text-center text-sm font-semibold text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
             onClick={onToggle}
             type="button"
           >
             <Building2 className="size-4" />
-            {siteConfig.mobileCampusLabel}
+            <span className="truncate">{siteConfig.mobileCampusLabel}</span>
           </button>
 
           <button
-            className="inline-flex min-h-12 items-center gap-2 rounded-[1.15rem] bg-slate-950 px-4 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
+            className="inline-flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-[1.15rem] bg-rose-600 px-3 text-center text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
             onClick={onReportClick}
             type="button"
           >
             <MapPinned className="size-4" />
-            <span className="hidden min-[390px]:inline">
-              {siteConfig.reportButtonLabel}
-            </span>
+            <span className="truncate">{siteConfig.reportButtonLabel}</span>
           </button>
         </div>
       </motion.div>
