@@ -8,7 +8,10 @@ async function main() {
   const { closeDatabasePool } = await import("../db/index");
 
   try {
-    await bootstrapApp();
+    await bootstrapApp({
+      withMigrations: true,
+      clearDemoData: true,
+    });
     assertOperationalEnvironment();
     console.log("RelataUFSC bootstrap completed.");
   } finally {
