@@ -88,6 +88,25 @@ function maskChatId(id: string | null) {
   return id.replace(/.(?=.{4})/g, "*");
 }
 
+function hasNonPublicAppUrl(appUrl: string) {
+  try {
+    const url = new URL(appUrl);
+    const hostname = url.hostname.toLowerCase();
+
+    return (
+      hostname === "localhost" ||
+      hostname === "0.0.0.0" ||
+      hostname === "127.0.0.1" ||
+      hostname.endsWith(".local") ||
+      /^10\./.test(hostname) ||
+      /^192\.168\./.test(hostname) ||
+      /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname)
+    );
+  } catch {
+    return true;
+  }
+}
+
 async function logDetailedTelegramError(
   method: string,
   err: unknown,
@@ -210,7 +229,7 @@ async function sendTelegramMedia(
 ) {
   try {
     const absoluteMediaPath = resolveStoredMediaPath(complaint.mediaPath!);
-    let fileBuffer: ArrayBufferLike;
+    let fileBuffer: Buffer;
     try {
       fileBuffer = await readFile(absoluteMediaPath);
     } catch (readErr) {
@@ -225,7 +244,7 @@ async function sendTelegramMedia(
     formData.set("reply_markup", JSON.stringify(keyboard));
     formData.set(
       fieldName,
-      new File([fileBuffer as any], basename(absoluteMediaPath), {
+      new File([new Uint8Array(fileBuffer)], basename(absoluteMediaPath), {
         type: complaint.mediaMimeType ?? undefined,
       }),
     );
@@ -275,6 +294,17 @@ export async function sendComplaintToTelegram(
     console.warn(
       "Telegram não está configurado. Relato pendente salvo sem aviso:",
       complaint.id,
+    );
+    return;
+  }
+
+  if (hasNonPublicAppUrl(env.appUrl)) {
+    console.error(
+      "APP_URL inválido para moderação por Telegram. Use uma URL pública HTTP(S), não localhost ou host interno.",
+      {
+        appUrl: env.appUrl,
+        complaintId: complaint.id,
+      },
     );
     return;
   }
