@@ -8,6 +8,14 @@ const emptyStringToUndefined = (value: unknown) => {
   return value;
 };
 
+const normalizeBooleanLikeString = (value: unknown) => {
+  if (typeof value !== "string") return value;
+  const s = value.trim().toLowerCase();
+  if (["true", "verdadeiro", "1", "yes", "y"].includes(s)) return "true";
+  if (["false", "falso", "0", "no", "n"].includes(s)) return "false";
+  return value;
+};
+
 const envSchema = z
   .object({
     NODE_ENV: z
@@ -84,10 +92,13 @@ const envSchema = z
       emptyStringToUndefined,
       z.string().min(1).optional(),
     ),
-    SEED_DEMO_DATA: z
-      .enum(["true", "false"])
-      .default("false")
-      .transform((value) => value === "true"),
+    SEED_DEMO_DATA: z.preprocess(
+      normalizeBooleanLikeString,
+      z
+        .enum(["true", "false"]) 
+        .default("false")
+        .transform((value) => value === "true"),
+    ),
     SUBMISSION_RATE_LIMIT_WINDOW_SECONDS: z.preprocess(
       emptyStringToUndefined,
       z.coerce.number().int().positive().default(300),
