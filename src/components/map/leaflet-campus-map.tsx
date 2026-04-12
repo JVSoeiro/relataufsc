@@ -15,6 +15,7 @@ import {
 } from "react-leaflet";
 
 import type { CampusConfig } from "@/config/campuses";
+import { formatPublicDate } from "@/lib/format";
 import type { DraftLocation, PublicComplaint } from "@/lib/types";
 
 type LeafletCampusMapProps = {
@@ -45,6 +46,11 @@ type ComplaintFeature = GeoJSON.Feature<
     complaint: PublicComplaint;
   }
 >;
+
+type ClusterPickerState = {
+  total: number;
+  complaints: PublicComplaint[];
+} | null;
 
 function getBoundsFromCenterRadius(
   center: [number, number],
@@ -269,6 +275,7 @@ export function LeafletCampusMap({
 }: LeafletCampusMapProps) {
   const alertColor = "#7f1d1d";
   const mapRef = useRef<L.Map | null>(null);
+  const [clusterPicker, setClusterPicker] = useState<ClusterPickerState>(null);
   const [bounds, setBounds] = useState<[number, number, number, number] | null>(
     null,
   );
@@ -277,6 +284,7 @@ export function LeafletCampusMap({
     (nextBounds: [number, number, number, number], nextZoom: number) => {
       setBounds(nextBounds);
       setZoom(nextZoom);
+      setClusterPicker(null);
     },
     [],
   );
@@ -319,6 +327,18 @@ export function LeafletCampusMap({
   useEffect(() => {
     mapRef.current?.invalidateSize();
   }, [campus.id]);
+
+  useEffect(() => {
+    if (reportMode) {
+      setClusterPicker(null);
+    }
+  }, [reportMode]);
+
+  useEffect(() => {
+    if (selectedComplaintId) {
+      setClusterPicker(null);
+    }
+  }, [selectedComplaintId]);
 
   return (
     <div className="relative h-full w-full">
@@ -363,16 +383,45 @@ export function LeafletCampusMap({
               <Marker
                 eventHandlers={{
                   click() {
-                    mapRef.current?.flyTo(
-                      [latitude, longitude],
-                      Math.min(
-                        clusterIndex.getClusterExpansionZoom(
-                          feature.properties.cluster_id!,
-                        ) ?? zoom + 2,
-                        18,
-                      ),
-                      { duration: 0.4 },
-                    );
+                    if (reportMode) {
+                      return;
+                    }
+
+                    const clusterId = feature.properties.cluster_id!;
+                    const expansionZoom =
+                      clusterIndex.getClusterExpansionZoom(clusterId);
+
+                    const shouldOfferPicker =
+                      pointCount <= 12 ||
+                      typeof expansionZoom !== "number" ||
+                      expansionZoom <= zoom + 0.5 ||
+                      zoom >= 18.5;
+
+                    if (shouldOfferPicker) {
+                      const leaves = clusterIndex.getLeaves(
+                        clusterId,
+                        Math.min(pointCount, 25),
+                        0,
+                      ) as Array<ComplaintFeature>;
+
+                      const leafComplaints = leaves
+                        .map((leaf) => leaf.properties.complaint)
+                        .filter(Boolean);
+
+                      setClusterPicker({
+                        total: pointCount,
+                        complaints: leafComplaints,
+                      });
+                      mapRef.current?.panTo([latitude, longitude], {
+                        animate: true,
+                        duration: 0.25,
+                      });
+                      return;
+                    }
+
+                    mapRef.current?.flyTo([latitude, longitude], expansionZoom, {
+                      duration: 0.4,
+                    });
                   },
                 }}
                 icon={createClusterIcon(alertColor, pointCount)}
@@ -408,6 +457,66 @@ export function LeafletCampusMap({
           />
         ) : null}
       </MapContainer>
+
+      {clusterPicker ? (
+        <div className="pointer-events-none absolute inset-x-3 bottom-[6.25rem] z-[712] lg:inset-x-auto lg:bottom-4 lg:left-4 lg:w-[22rem]">
+          <section className="pointer-events-auto overflow-hidden rounded-[1.55rem] border border-white/80 bg-[rgba(255,255,255,0.94)] shadow-[0_25px_70px_rgba(15,23,42,0.16)] backdrop-blur-xl">
+            <header className="flex items-start justify-between gap-3 px-4 pt-4">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                  Relatos próximos
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-900">
+                  {clusterPicker.total} relatos nesta área
+                </p>
+              </div>
+
+              <button
+                aria-label="Fechar lista de relatos próximos"
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                onClick={() => setClusterPicker(null)}
+                type="button"
+              >
+                <span className="text-lg leading-none">×</span>
+              </button>
+            </header>
+
+            <div className="mt-3 max-h-[min(38svh,20rem)] overflow-y-auto overscroll-contain px-2 pb-3">
+              {clusterPicker.complaints.map((complaint) => (
+                <button
+                  className="flex w-full items-start gap-3 rounded-[1.1rem] px-3 py-2.5 text-left transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                  key={complaint.id}
+                  onClick={() => {
+                    onComplaintSelect(complaint);
+                    setClusterPicker(null);
+                  }}
+                  type="button"
+                >
+                  <span className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-[#7f1d1d] text-sm font-bold text-white">
+                    !
+                  </span>
+
+                  <span className="min-w-0 flex-1">
+                    <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-sm font-semibold text-slate-900">
+                      {complaint.description}
+                    </span>
+                    <span className="mt-0.5 block overflow-hidden text-ellipsis whitespace-nowrap text-[0.78rem] font-medium text-slate-500">
+                      {formatPublicDate(complaint.publishedAt)} ·{" "}
+                      {complaint.displayName}
+                    </span>
+                  </span>
+                </button>
+              ))}
+
+              {clusterPicker.total > clusterPicker.complaints.length ? (
+                <p className="px-3 pt-2 text-xs font-medium text-slate-500">
+                  Mostrando os {clusterPicker.complaints.length} mais próximos. Aproxime o mapa para separar mais relatos.
+                </p>
+              ) : null}
+            </div>
+          </section>
+        </div>
+      ) : null}
 
       {isLoading ? (
         <div className="pointer-events-none absolute inset-x-4 top-4 z-[610] inline-flex w-fit items-center gap-2 rounded-full border border-white/80 bg-white/92 px-4 py-2 text-sm font-medium text-slate-700 shadow-[0_18px_40px_rgba(15,23,42,0.12)]">
