@@ -54,7 +54,7 @@ async function handleRemoveFlow(chatId: string, text: string) {
       expiresAt: Date.now() + 10 * 60 * 1000,
     });
     await sendTelegramAdminMessage(
-      "Certo. Envie o ID do relato que deseja remover (ex.: cmp_... ou o código curto). Para cancelar, envie: Cancelar",
+      "Certo. Envie o Código do relato (8 caracteres) ou o ID completo (cmp_...). Para cancelar, envie: Cancelar",
     );
     return;
   }
@@ -138,4 +138,3 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }
-

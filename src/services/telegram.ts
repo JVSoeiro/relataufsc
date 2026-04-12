@@ -46,10 +46,17 @@ function buildModerationText(
   const campus = campusById[complaint.campusId];
   const fileName = complaint.mediaPath ? basename(complaint.mediaPath) : null;
   const descriptionLimit = complaint.mediaPath ? 260 : 520;
+  const shortCode = (complaint.id.startsWith("cmp_")
+    ? complaint.id.slice("cmp_".length)
+    : complaint.id
+  )
+    .split("-")[0]
+    ?.slice(0, 8);
 
   return [
     "Novo relato aguardando moderação",
-    `Protocolo: ${complaint.id}`,
+    shortCode ? `Código: \`${shortCode}\`` : null,
+    `ID: \`${complaint.id}\``,
     `Campus: ${campus.nome}`,
     `Nome informado: ${complaint.publicName ?? "Anônimo"}`,
     `E-mail para retorno: ${complaint.submitterEmail ?? "Não informado"}`,
@@ -71,6 +78,9 @@ function buildModerationText(
       : "Arquivo: não enviado",
     `Descrição: ${truncateText(complaint.description, descriptionLimit)}`,
     previewUrl ? `Pré-visualização: ${previewUrl}` : null,
+    shortCode
+      ? "Remoção: envie `Remove` e depois este Código (ou o ID completo)."
+      : "Remoção: envie `Remove` e depois o ID completo.",
   ]
     .filter(Boolean)
     .join("\n");

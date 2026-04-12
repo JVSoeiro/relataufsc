@@ -1,7 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { CalendarDays, MapPin, UserRound, X } from "lucide-react";
+import { CalendarDays, Copy, MapPin, UserRound, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { campusById } from "@/config/campuses";
 import { formatPublicDate } from "@/lib/format";
@@ -16,6 +17,18 @@ export function ComplaintDetailCard({
   complaint,
   onClose,
 }: ComplaintDetailCardProps) {
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setCopied(false);
+  }, [complaint?.id]);
+
+  function shortCodeFromId(id: string) {
+    const raw = id.startsWith("cmp_") ? id.slice("cmp_".length) : id;
+    const firstSegment = raw.split("-")[0] ?? raw;
+    return firstSegment.slice(0, 8);
+  }
+
   return (
     <AnimatePresence>
       {complaint ? (
@@ -63,12 +76,31 @@ export function ComplaintDetailCard({
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
                     Relato público
                   </p>
-                  <p className="mt-1 flex items-center gap-2 text-[0.78rem] font-medium text-slate-500">
-                    <span className="shrink-0">ID:</span>
-                    <span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-mono">
-                      {complaint.id}
+                  <div className="mt-1 flex items-center gap-2 text-[0.78rem] font-medium text-slate-500">
+                    <span className="shrink-0">Código:</span>
+                    <span className="font-mono text-slate-700">
+                      {shortCodeFromId(complaint.id)}
                     </span>
-                  </p>
+
+                    <button
+                      aria-label="Copiar ID do relato"
+                      className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-[0.72rem] font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(complaint.id);
+                          setCopied(true);
+                          window.setTimeout(() => setCopied(false), 1600);
+                        } catch {
+                          setCopied(false);
+                        }
+                      }}
+                      type="button"
+                    >
+                      <Copy className="size-3.5" />
+                      <span className="sr-only">Copiar</span>
+                      <span aria-live="polite">{copied ? "Copiado" : "Copiar"}</span>
+                    </button>
+                  </div>
                   <p className="mt-2 text-base leading-7 text-slate-900">
                     {complaint.description}
                   </p>
