@@ -92,6 +92,10 @@ const envSchema = z
       emptyStringToUndefined,
       z.string().min(1).optional(),
     ),
+    TELEGRAM_WEBHOOK_SECRET: z.preprocess(
+      emptyStringToUndefined,
+      z.string().min(12).optional(),
+    ),
     MODERATION_SECRET: z
       .string()
       .min(32)
@@ -246,6 +250,7 @@ export const env = {
   maxUploadSizeBytes: parsedEnv.MAX_UPLOAD_SIZE_MB * 1024 * 1024,
   telegramBotToken: parsedEnv.TELEGRAM_BOT_TOKEN ?? null,
   telegramChatId: parsedEnv.TELEGRAM_CHAT_ID ?? null,
+  telegramWebhookSecret: parsedEnv.TELEGRAM_WEBHOOK_SECRET ?? null,
   moderationSecret: parsedEnv.MODERATION_SECRET,
   moderationTokenTtlMinutes: parsedEnv.MODERATION_TOKEN_TTL_MINUTES,
   brevoSmtpHost: parsedEnv.BREVO_SMTP_HOST ?? "smtp-relay.brevo.com",
@@ -293,6 +298,12 @@ export function assertOperationalEnvironment() {
   if (env.nodeEnv === "production" && !flags.telegramConfigured) {
     throw new Error(
       "TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are required in production.",
+    );
+  }
+
+  if (env.nodeEnv === "production" && flags.telegramConfigured && !env.telegramWebhookSecret) {
+    console.warn(
+      "Aviso: TELEGRAM_WEBHOOK_SECRET não está configurado. O webhook funcionará apenas com validação por chat id, o que é menos seguro.",
     );
   }
 

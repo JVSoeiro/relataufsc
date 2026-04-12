@@ -51,6 +51,12 @@ type CountRow = {
   total: number;
 };
 
+type ComplaintRemovalRow = {
+  id: string;
+  status: string;
+  mediaPath: string | null;
+};
+
 export async function insertPendingComplaint(input: InsertPendingComplaintInput) {
   await pool`
     INSERT INTO complaints (
@@ -172,4 +178,49 @@ export async function clearComplaintMedia(id: string) {
       media_size_bytes = NULL
     WHERE id = ${id}
   `;
+}
+
+export async function getComplaintForRemoval(id: string) {
+  const rows = await pool<ComplaintRemovalRow[]>`
+    SELECT
+      id,
+      status,
+      media_path AS "mediaPath"
+    FROM complaints
+    WHERE id = ${id}
+    LIMIT 1
+  `;
+
+  return rows[0] ?? null;
+}
+
+export async function listComplaintIdsByPrefix(prefix: string, limit = 3) {
+  const rows = await pool<{ id: string }[]>`
+    SELECT id
+    FROM complaints
+    WHERE id ILIKE ${`${prefix}%`}
+    ORDER BY created_at DESC
+    LIMIT ${limit}
+  `;
+
+  return rows.map((row) => row.id);
+}
+
+export async function removeComplaintById(args: { complaintId: string; moderatedAt: string }) {
+  const rows = await pool<{ id: string }[]>`
+    UPDATE complaints
+    SET
+      status = 'rejected',
+      moderated_at = ${args.moderatedAt},
+      approved_at = NULL,
+      submitter_email = NULL,
+      media_path = NULL,
+      media_kind = NULL,
+      media_mime_type = NULL,
+      media_size_bytes = NULL
+    WHERE id = ${args.complaintId}
+    RETURNING id
+  `;
+
+  return rows.length > 0;
 }

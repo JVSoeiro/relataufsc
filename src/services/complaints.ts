@@ -3,8 +3,11 @@ import { randomUUID } from "node:crypto";
 import { campusById, type CampusId } from "@/config/campuses";
 import {
   getApprovedComplaintCount as getApprovedComplaintCountFromRepository,
+  getComplaintForRemoval,
   insertPendingComplaint,
   listApprovedComplaintsByCampus,
+  listComplaintIdsByPrefix,
+  removeComplaintById,
 } from "@/db/repositories/complaints-repository";
 import type { MediaKind } from "@/lib/constants";
 import { flags } from "@/lib/env";
@@ -136,4 +139,56 @@ export async function createPendingComplaint(input: PendingComplaintInput) {
     await deleteStoredMedia(uploadedMedia?.relativePath);
     throw error;
   }
+}
+
+export type RemoveComplaintResult =
+  | { ok: true; id: string }
+  | { ok: false; reason: "not_found" }
+  | { ok: false; reason: "ambiguous"; candidates: string[] };
+
+function normalizeRemoveIdInput(raw: string) {
+  return raw.trim().replaceAll(/\s+/g, " ");
+}
+
+async function resolveComplaintIdForRemoval(raw: string) {
+  const input = normalizeRemoveIdInput(raw);
+  if (!input) return null;
+
+  if (input.startsWith("cmp_") && input.length >= 12) {
+    return { kind: "exact" as const, id: input };
+  }
+
+  // Accept short codes such as the first UUID segment.
+  const short = input.replace(/^cmp_/, "");
+  if (/^[a-f0-9]{6,64}$/i.test(short)) {
+    const prefix = `cmp_${short}`;
+    const matches = await listComplaintIdsByPrefix(prefix, 5);
+    if (matches.length === 1) return { kind: "exact" as const, id: matches[0] };
+    if (matches.length > 1) return { kind: "ambiguous" as const, candidates: matches };
+    return null;
+  }
+
+  return null;
+}
+
+export async function removeComplaintByTelegramId(rawId: string): Promise<RemoveComplaintResult> {
+  if (flags.mockMode) {
+    // No-op in mock mode to avoid touching real persistence.
+    return { ok: false, reason: "not_found" };
+  }
+
+  const resolved = await resolveComplaintIdForRemoval(rawId);
+  if (!resolved) return { ok: false, reason: "not_found" };
+  if (resolved.kind === "ambiguous") {
+    return { ok: false, reason: "ambiguous", candidates: resolved.candidates };
+  }
+
+  const complaint = await getComplaintForRemoval(resolved.id);
+  if (!complaint) return { ok: false, reason: "not_found" };
+
+  // Delete media first (idempotent: safe if missing), then drop from public pipeline.
+  await deleteStoredMedia(complaint.mediaPath);
+  await removeComplaintById({ complaintId: complaint.id, moderatedAt: new Date().toISOString() });
+
+  return { ok: true, id: complaint.id };
 }

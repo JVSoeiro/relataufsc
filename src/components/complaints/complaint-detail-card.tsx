@@ -63,6 +63,12 @@ export function ComplaintDetailCard({
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
                     Relato público
                   </p>
+                  <p className="mt-1 flex items-center gap-2 text-[0.78rem] font-medium text-slate-500">
+                    <span className="shrink-0">ID:</span>
+                    <span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-mono">
+                      {complaint.id}
+                    </span>
+                  </p>
                   <p className="mt-2 text-base leading-7 text-slate-900">
                     {complaint.description}
                   </p>

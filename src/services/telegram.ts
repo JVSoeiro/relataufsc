@@ -214,6 +214,24 @@ async function sendTelegramJson(method: string, body: Record<string, unknown>) {
   }
 }
 
+export async function sendTelegramAdminMessage(text: string) {
+  if (flags.mockMode) {
+    console.info("Mock mode ativo. Mensagem administrativa ignorada:", text);
+    return;
+  }
+
+  if (!flags.telegramConfigured) {
+    console.warn("Telegram não está configurado. Mensagem ignorada:", text);
+    return;
+  }
+
+  await sendTelegramJson("sendMessage", {
+    chat_id: env.telegramChatId,
+    text,
+    disable_web_page_preview: true,
+  });
+}
+
 async function sendTelegramMedia(
   method: "sendPhoto" | "sendVideo",
   fieldName: "photo" | "video",
