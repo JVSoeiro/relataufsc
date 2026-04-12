@@ -340,7 +340,10 @@ export function LandingPageShell({
                   <div className="flex items-start gap-2 lg:hidden">
                     <div className="min-w-0 flex-1">
                       <p className="text-[0.82rem] font-semibold leading-4 text-slate-900 lg:text-[0.9rem] lg:leading-5">
-                        Gostou? Conheça mais!
+                        Gostou?
+                      </p>
+                      <p className="mt-0.5 text-[0.78rem] font-normal leading-4 text-slate-600">
+                        Conheça a chapa 41!
                       </p>
                     </div>
 
@@ -361,7 +364,7 @@ export function LandingPageShell({
                         UFSC?
                       </p>
                       <p className="mt-1 text-sm font-normal leading-5 text-slate-600">
-                        Conheça-nos melhor!
+                        Conheça a chapa 41!
                       </p>
                     </div>
 
