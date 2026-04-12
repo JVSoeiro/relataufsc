@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   MapContainer,
   Marker,
+  Popup,
   TileLayer,
   useMap,
   useMapEvents,
@@ -50,6 +51,7 @@ type ComplaintFeature = GeoJSON.Feature<
 type ClusterPickerState = {
   total: number;
   complaints: PublicComplaint[];
+  position: [number, number];
 } | null;
 
 function getBoundsFromCenterRadius(
@@ -204,14 +206,18 @@ function MapEvents({
   reportMode,
   onBoundsChange,
   onDraftLocationChange,
+  onNonReportMapClick,
 }: {
   reportMode: boolean;
   onBoundsChange: (bbox: [number, number, number, number], zoom: number) => void;
   onDraftLocationChange: (location: DraftLocation) => void;
+  onNonReportMapClick?: () => void;
 }) {
   const map = useMapEvents({
     click(event) {
       if (!reportMode) {
+        map.closePopup();
+        onNonReportMapClick?.();
         return;
       }
 
@@ -284,7 +290,6 @@ export function LeafletCampusMap({
     (nextBounds: [number, number, number, number], nextZoom: number) => {
       setBounds(nextBounds);
       setZoom(nextZoom);
-      setClusterPicker(null);
     },
     [],
   );
@@ -329,6 +334,10 @@ export function LeafletCampusMap({
   }, [campus.id]);
 
   useEffect(() => {
+    setClusterPicker(null);
+  }, [campus.id]);
+
+  useEffect(() => {
     if (reportMode) {
       setClusterPicker(null);
     }
@@ -339,6 +348,32 @@ export function LeafletCampusMap({
       setClusterPicker(null);
     }
   }, [selectedComplaintId]);
+
+  useEffect(() => {
+    if (!clusterPicker || reportMode) {
+      return;
+    }
+
+    const handleDocumentClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+
+      // Do not close when interacting inside the picker itself.
+      if (target.closest(".ufsc-cluster-picker-root")) {
+        return;
+      }
+
+      mapRef.current?.closePopup();
+      setClusterPicker(null);
+    };
+
+    // Capture phase: ensures we also close when clicking on floating overlays.
+    document.addEventListener("click", handleDocumentClick, true);
+
+    return () => {
+      document.removeEventListener("click", handleDocumentClick, true);
+    };
+  }, [clusterPicker, reportMode]);
 
   return (
     <div className="relative h-full w-full">
@@ -370,6 +405,7 @@ export function LeafletCampusMap({
         <MapEvents
           onBoundsChange={handleBoundsChange}
           onDraftLocationChange={onDraftLocationChange}
+          onNonReportMapClick={() => setClusterPicker(null)}
           reportMode={reportMode}
         />
 
@@ -411,10 +447,7 @@ export function LeafletCampusMap({
                       setClusterPicker({
                         total: pointCount,
                         complaints: leafComplaints,
-                      });
-                      mapRef.current?.panTo([latitude, longitude], {
-                        animate: true,
-                        duration: 0.25,
+                        position: [latitude, longitude],
                       });
                       return;
                     }
@@ -450,6 +483,83 @@ export function LeafletCampusMap({
           );
         })}
 
+        {clusterPicker ? (
+          <Popup
+            autoClose
+            autoPan
+            autoPanPadding={[16, 16]}
+            className="ufsc-cluster-picker-popup"
+            closeButton={false}
+            closeOnClick
+            eventHandlers={{
+              remove: () => setClusterPicker(null),
+            }}
+            offset={[0, -18]}
+            position={clusterPicker.position}
+          >
+            <section className="ufsc-cluster-picker-root overflow-hidden rounded-[1.55rem] border border-white/80 bg-[rgba(255,255,255,0.94)] shadow-[0_25px_70px_rgba(15,23,42,0.16)] backdrop-blur-xl">
+              <header className="flex items-start justify-between gap-3 px-4 pt-4">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                    Relatos próximos
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">
+                    {clusterPicker.total} relatos nesta área
+                  </p>
+                </div>
+
+                <button
+                  aria-label="Fechar lista de relatos próximos"
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                  onClick={() => {
+                    mapRef.current?.closePopup();
+                    setClusterPicker(null);
+                  }}
+                  type="button"
+                >
+                  <span className="text-lg leading-none">×</span>
+                </button>
+              </header>
+
+              <div className="mt-3 max-h-[min(38svh,20rem)] overflow-y-auto overscroll-contain px-2 pb-3">
+                {clusterPicker.complaints.map((complaint) => (
+                  <button
+                    className="flex w-full items-start gap-3 rounded-[1.1rem] px-3 py-2.5 text-left transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                    key={complaint.id}
+                    onClick={() => {
+                      onComplaintSelect(complaint);
+                      mapRef.current?.closePopup();
+                      setClusterPicker(null);
+                    }}
+                    type="button"
+                  >
+                    <span className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-[#7f1d1d] text-sm font-bold text-white">
+                      !
+                    </span>
+
+                    <span className="min-w-0 flex-1">
+                      <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-sm font-semibold text-slate-900">
+                        {complaint.description}
+                      </span>
+                      <span className="mt-0.5 block overflow-hidden text-ellipsis whitespace-nowrap text-[0.78rem] font-medium text-slate-500">
+                        {formatPublicDate(complaint.publishedAt)} ·{" "}
+                        {complaint.displayName}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+
+                {clusterPicker.total > clusterPicker.complaints.length ? (
+                  <p className="px-3 pt-2 text-xs font-medium text-slate-500">
+                    Mostrando os {clusterPicker.complaints.length} mais
+                    próximos. Aproxime o mapa para separar mais relatos.
+                  </p>
+                ) : null}
+              </div>
+            </section>
+          </Popup>
+        ) : null}
+
         {draftLocation ? (
           <Marker
             icon={createDraftPinIcon(alertColor)}
@@ -457,66 +567,6 @@ export function LeafletCampusMap({
           />
         ) : null}
       </MapContainer>
-
-      {clusterPicker ? (
-        <div className="pointer-events-none absolute inset-x-3 bottom-[6.25rem] z-[712] lg:inset-x-auto lg:bottom-4 lg:left-4 lg:w-[22rem]">
-          <section className="pointer-events-auto overflow-hidden rounded-[1.55rem] border border-white/80 bg-[rgba(255,255,255,0.94)] shadow-[0_25px_70px_rgba(15,23,42,0.16)] backdrop-blur-xl">
-            <header className="flex items-start justify-between gap-3 px-4 pt-4">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                  Relatos próximos
-                </p>
-                <p className="mt-1 text-sm font-semibold text-slate-900">
-                  {clusterPicker.total} relatos nesta área
-                </p>
-              </div>
-
-              <button
-                aria-label="Fechar lista de relatos próximos"
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
-                onClick={() => setClusterPicker(null)}
-                type="button"
-              >
-                <span className="text-lg leading-none">×</span>
-              </button>
-            </header>
-
-            <div className="mt-3 max-h-[min(38svh,20rem)] overflow-y-auto overscroll-contain px-2 pb-3">
-              {clusterPicker.complaints.map((complaint) => (
-                <button
-                  className="flex w-full items-start gap-3 rounded-[1.1rem] px-3 py-2.5 text-left transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
-                  key={complaint.id}
-                  onClick={() => {
-                    onComplaintSelect(complaint);
-                    setClusterPicker(null);
-                  }}
-                  type="button"
-                >
-                  <span className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-[#7f1d1d] text-sm font-bold text-white">
-                    !
-                  </span>
-
-                  <span className="min-w-0 flex-1">
-                    <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-sm font-semibold text-slate-900">
-                      {complaint.description}
-                    </span>
-                    <span className="mt-0.5 block overflow-hidden text-ellipsis whitespace-nowrap text-[0.78rem] font-medium text-slate-500">
-                      {formatPublicDate(complaint.publishedAt)} ·{" "}
-                      {complaint.displayName}
-                    </span>
-                  </span>
-                </button>
-              ))}
-
-              {clusterPicker.total > clusterPicker.complaints.length ? (
-                <p className="px-3 pt-2 text-xs font-medium text-slate-500">
-                  Mostrando os {clusterPicker.complaints.length} mais próximos. Aproxime o mapa para separar mais relatos.
-                </p>
-              ) : null}
-            </div>
-          </section>
-        </div>
-      ) : null}
 
       {isLoading ? (
         <div className="pointer-events-none absolute inset-x-4 top-4 z-[610] inline-flex w-fit items-center gap-2 rounded-full border border-white/80 bg-white/92 px-4 py-2 text-sm font-medium text-slate-700 shadow-[0_18px_40px_rgba(15,23,42,0.12)]">

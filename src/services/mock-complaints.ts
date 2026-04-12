@@ -41,8 +41,8 @@ const initialMockComplaints: PublicComplaint[] = [
     campusId: "florianopolis",
     description:
       "Trecho com iluminação insuficiente no início da noite, reduzindo a sensação de segurança.",
-    latitude: -27.6072,
-    longitude: -48.5241,
+    latitude: -27.60218,
+    longitude: -48.51832,
     mediaKind: null,
     mediaMimeType: null,
     mediaUrl: null,
