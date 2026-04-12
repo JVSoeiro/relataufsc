@@ -1,7 +1,5 @@
 import { Github } from "lucide-react";
 
-import { brandConfig } from "@/config/brand";
-
 type BrandLockupProps = {
   compact?: boolean;
 };
@@ -11,13 +9,11 @@ export function BrandLockup({ compact = false }: BrandLockupProps) {
     <div
       className={
         compact
-          ? "mx-auto grid w-full max-w-[34rem] grid-cols-2 items-center gap-[clamp(0.9rem,2vw,1.45rem)]"
-          : "grid grid-cols-2 items-center gap-[clamp(0.95rem,2.2vw,1.7rem)]"
+          ? "mx-auto w-full max-w-[34rem]"
+          : "w-full"
       }
     >
-      <div
-        className={compact ? "min-w-0 text-center" : "min-w-0 text-center"}
-      >
+      <div className="min-w-0 text-center">
         <h1
           className={
             compact
@@ -74,21 +70,6 @@ export function BrandLockup({ compact = false }: BrandLockupProps) {
           </a>
         </div>
       </div>
-
-      {brandConfig.partnerLogoSrc ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          alt={brandConfig.partnerLogoAlt}
-          className={
-            compact
-              ? "block h-[2.85rem] w-full justify-self-center object-contain object-center"
-              : "block h-[4.05rem] w-full justify-self-center object-contain object-center"
-          }
-          src={brandConfig.partnerLogoSrc}
-        />
-      ) : (
-        <span className="text-sm text-slate-500">{brandConfig.placeholderLabel}</span>
-      )}
     </div>
   );
 }
