@@ -333,6 +333,8 @@ export function LeafletCampusMap({
     mapRef.current?.invalidateSize();
   }, [campus.id]);
 
+  const showBuildingLabels = zoom >= 18;
+
   useEffect(() => {
     setClusterPicker(null);
   }, [campus.id]);
@@ -390,15 +392,24 @@ export function LeafletCampusMap({
         zoomControl={false}
         zoomSnap={0.25}
       >
-        <TileLayer
-          attribution='&copy; OpenStreetMap contributors &copy; CARTO'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png"
-        />
-        <TileLayer
-          attribution='&copy; OpenStreetMap contributors &copy; CARTO'
-          pane="overlayPane"
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
-        />
+        {showBuildingLabels ? (
+          <TileLayer
+            attribution='&copy; OpenStreetMap contributors &copy; CARTO'
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          />
+        ) : (
+          <>
+            <TileLayer
+              attribution='&copy; OpenStreetMap contributors &copy; CARTO'
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png"
+            />
+            <TileLayer
+              attribution='&copy; OpenStreetMap contributors &copy; CARTO'
+              pane="overlayPane"
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
+            />
+          </>
+        )}
 
         <ZoomControl position="bottomright" />
         <CampusViewport campus={campus} focusNonce={campusFocusNonce} />
