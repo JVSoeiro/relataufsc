@@ -39,7 +39,7 @@ export function ComplaintDetailCard({
           initial={{ opacity: 0, y: 18 }}
           transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="pointer-events-auto overflow-hidden rounded-[1.75rem] border border-white/80 bg-[rgba(255,255,255,0.94)] shadow-[0_25px_70px_rgba(15,23,42,0.16)] backdrop-blur-xl">
+          <div className="pointer-events-auto flex max-h-[min(78svh,44rem)] flex-col overflow-hidden rounded-[1.75rem] border border-white/80 bg-[rgba(255,255,255,0.94)] shadow-[0_25px_70px_rgba(15,23,42,0.16)] backdrop-blur-xl lg:max-h-[min(84svh,46rem)]">
             {complaint.mediaUrl ? (
               complaint.mediaMimeType?.startsWith("video/") ? (
                 <div className="flex max-h-[min(52svh,34rem)] min-h-[12rem] w-full items-center justify-center bg-slate-950 px-2 py-2 sm:px-3 sm:py-3">
@@ -70,7 +70,7 @@ export function ComplaintDetailCard({
               </div>
             )}
 
-            <div className="p-5">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 pb-24 lg:pb-5">
               <div className="flex items-start gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
