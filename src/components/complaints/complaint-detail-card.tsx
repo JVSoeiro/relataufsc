@@ -39,7 +39,7 @@ export function ComplaintDetailCard({
           initial={{ opacity: 0, y: 18 }}
           transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="pointer-events-auto relative max-h-[min(78svh,44rem)] overflow-hidden rounded-[1.75rem] border border-white/80 bg-[rgba(255,255,255,0.94)] shadow-[0_25px_70px_rgba(15,23,42,0.16)] backdrop-blur-xl lg:max-h-[min(84svh,46rem)]">
+          <div className="pointer-events-auto relative overflow-hidden rounded-[1.75rem] border border-white/80 bg-[rgba(255,255,255,0.94)] shadow-[0_25px_70px_rgba(15,23,42,0.16)] backdrop-blur-xl">
             <button
               aria-label="Fechar relato"
               className="absolute right-4 top-4 z-10 inline-flex size-10 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-600 shadow-[0_18px_44px_rgba(15,23,42,0.12)] backdrop-blur-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
@@ -49,7 +49,10 @@ export function ComplaintDetailCard({
               <X className="size-4" />
             </button>
 
-            <div className="h-full overflow-y-auto overscroll-contain">
+            <div
+              className="max-h-[min(78svh,44rem)] overflow-y-auto overscroll-contain lg:max-h-[min(84svh,46rem)]"
+              data-testid="complaint-detail-scroll"
+            >
               {complaint.mediaUrl ? (
                 complaint.mediaMimeType?.startsWith("video/") ? (
                   <div className="flex max-h-[min(52svh,34rem)] min-h-[12rem] w-full items-center justify-center bg-slate-950 px-2 py-2 sm:px-3 sm:py-3">
